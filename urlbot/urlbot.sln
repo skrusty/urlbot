@@ -1,0 +1,38 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2012
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "urlbot", "BenBOT\urlbot.csproj", "{3D958051-5301-4BCA-B16E-CA41C257A8E8}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SmartIRC4NET", "SmartIRC4NET\SmartIRC4NET.csproj", "{3E96393C-148A-4760-8A9E-1EE361F4CAFE}"
+EndProject
+Global
+	GlobalSection(TeamFoundationVersionControl) = preSolution
+		SccNumberOfProjects = 3
+		SccEnterpriseProvider = {4CA58AB2-18FA-4F8D-95D4-32DDF27D184C}
+		SccTeamFoundationServer = https://tfs.codeplex.com/tfs/tfs10
+		SccLocalPath0 = .
+		SccProjectUniqueName1 = BenBOT\\urlbot.csproj
+		SccProjectName1 = BenBOT
+		SccLocalPath1 = BenBOT
+		SccProjectUniqueName2 = SmartIRC4NET\\SmartIRC4NET.csproj
+		SccProjectName2 = SmartIRC4NET
+		SccLocalPath2 = SmartIRC4NET
+	EndGlobalSection
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{3D958051-5301-4BCA-B16E-CA41C257A8E8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3D958051-5301-4BCA-B16E-CA41C257A8E8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3D958051-5301-4BCA-B16E-CA41C257A8E8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3D958051-5301-4BCA-B16E-CA41C257A8E8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3E96393C-148A-4760-8A9E-1EE361F4CAFE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3E96393C-148A-4760-8A9E-1EE361F4CAFE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3E96393C-148A-4760-8A9E-1EE361F4CAFE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3E96393C-148A-4760-8A9E-1EE361F4CAFE}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
