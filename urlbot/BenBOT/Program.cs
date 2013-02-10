@@ -280,6 +280,7 @@ namespace BenBOT
                             if (user != null && user.IsAdmin)
                             {
                                 // Quits the bot
+                                Config.SaveURLs();
                                 irc.Disconnect();
                                 System.Environment.Exit(0);
                             }
