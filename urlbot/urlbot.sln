@@ -5,9 +5,11 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "urlbot", "BenBOT\urlbot.csp
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SmartIRC4NET", "SmartIRC4NET\SmartIRC4NET.csproj", "{3E96393C-148A-4760-8A9E-1EE361F4CAFE}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DynamicQuery", "DynamicQuery\DynamicQuery.csproj", "{313A285B-5B96-4D66-BE3D-0DDB70810062}"
+EndProject
 Global
 	GlobalSection(TeamFoundationVersionControl) = preSolution
-		SccNumberOfProjects = 3
+		SccNumberOfProjects = 4
 		SccEnterpriseProvider = {4CA58AB2-18FA-4F8D-95D4-32DDF27D184C}
 		SccTeamFoundationServer = https://tfs.codeplex.com/tfs/tfs10
 		SccLocalPath0 = .
@@ -17,6 +19,9 @@ Global
 		SccProjectUniqueName2 = SmartIRC4NET\\SmartIRC4NET.csproj
 		SccProjectName2 = SmartIRC4NET
 		SccLocalPath2 = SmartIRC4NET
+		SccProjectUniqueName3 = DynamicQuery\\DynamicQuery.csproj
+		SccProjectName3 = DynamicQuery
+		SccLocalPath3 = DynamicQuery
 	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -31,6 +36,10 @@ Global
 		{3E96393C-148A-4760-8A9E-1EE361F4CAFE}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3E96393C-148A-4760-8A9E-1EE361F4CAFE}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{3E96393C-148A-4760-8A9E-1EE361F4CAFE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{313A285B-5B96-4D66-BE3D-0DDB70810062}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{313A285B-5B96-4D66-BE3D-0DDB70810062}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{313A285B-5B96-4D66-BE3D-0DDB70810062}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{313A285B-5B96-4D66-BE3D-0DDB70810062}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

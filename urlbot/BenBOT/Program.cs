@@ -7,6 +7,9 @@ using System.Net.Mail;
 using Meebey.SmartIrc4net;
 using System.Text.RegularExpressions;
 
+using System.Linq.Dynamic;
+
+
 namespace BenBOT
 {
     class Program
@@ -79,6 +82,65 @@ namespace BenBOT
                             irc.SendMessage(SendType.Message, e.Data.Nick, "No Matches Found");
                         }
                         break;
+                    case "!QUERY":
+                        List<MatchedURL> rtn = Config.MatchedURLs;
+                        try
+                        {
+                            string query = string.Empty;
+                            
+                            switch (segments[1].ToUpper())
+                            {
+                                case "SAVE":
+                                    if (user != null)
+                                    {
+                                        query = string.Join(" ", segments.Skip(3));
+                                        user.SavedQueries.Add(new SavedQuery()
+                                        {
+                                            Name = segments[2],
+                                            Query = query
+                                        });
+
+                                        Config.SaveConfig();
+                                        irc.SendMessage(SendType.Message, e.Data.Nick, "Saved new query: " + segments[2]);
+                                    }
+                                    break;
+                                case "RUN":
+                                    if (user != null)
+                                    {
+                                        var savedquery = user.SavedQueries.Where(x => x.Name == segments[2]).SingleOrDefault();
+                                        if (savedquery != null)
+                                            query = savedquery.Query;
+                                        else
+                                        {
+                                            irc.SendMessage(SendType.Message, e.Data.Nick, "Query not found");
+                                            return;
+                                        }
+                                    }
+                                    break;
+                                default:
+                                    query = string.Join(" ", segments.Skip(1));
+                                    break;
+                            }
+
+                            rtn = rtn.AsQueryable().Where(query).ToList();
+                            if (rtn.Count() > 0)
+                            {
+                                irc.SendMessage(SendType.Message, e.Data.Nick, string.Format("{0,-20}{1,-15}{2,-10}{3}", "Channel", "Nick", "Time", "URL"));
+                                foreach (var url in rtn)
+                                {
+                                    irc.SendMessage(SendType.Message, e.Data.Nick, string.Format("{0,-20}{1,-15}{2,-10}{3}", url.Channel, url.Nick, url.DateTime.ToShortTimeString(), url.URL));
+                                }
+                            }
+                            else
+                            {
+                                irc.SendMessage(SendType.Message, e.Data.Nick, "No Matches Found");
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            irc.SendMessage(SendType.Message, e.Data.Nick, ex.Message);
+                        }
+                        break;
                     case "!JOIN":
                         // Save new channel to join list
                         try
@@ -106,6 +168,16 @@ namespace BenBOT
                                     partChan = e.Data.Channel;
                                 irc.RfcPart(partChan);
                                 Config.Settings.AutoJoinChannels.Remove(partChan);
+                            }
+                        }
+                        catch { }
+                        break;
+                    case "!SAVE":
+                        try
+                        {
+                            if (user.IsAdmin)
+                            {
+                                Config.SaveConfig();
                             }
                         }
                         catch { }
