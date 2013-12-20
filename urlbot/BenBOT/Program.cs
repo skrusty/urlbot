@@ -54,6 +54,23 @@ namespace BenBOT
 
         }
 
+        public static void BroadcastToAdmins(string message, params string[] paramStrings)
+        {
+            try
+            {
+                var msg = string.Format(message, paramStrings);
+                var admins = Config.Settings.GetAdmins();
+                if (admins != null && admins.Count > 0)
+                {
+                    admins.ForEach(x => irc.RfcPrivmsg(x.Nick, msg));
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.ToString());
+            }
+        }
+
         static public void ParseMessage(IrcEventArgs e)
         {
             if (e.Data.Message.StartsWith("!"))
@@ -64,6 +81,22 @@ namespace BenBOT
                 string[] segments = e.Data.Message.Split(new char[] { ' ' });
                 switch (segments[0].ToUpper())
                 {
+                    case "!ADDMATCH":
+                        if (user.IsAdmin)
+                        {
+                            try
+                            {
+                                Config.Settings.MatchActions.Add(new ActionMatch()
+                                {
+                                    Action = segments[1],
+                                    MatchString = segments[2],
+                                    Reason = string.Join(" ", segments.Skip(2))
+                                });
+                                Config.SaveConfig();
+                            }
+                            catch{}
+                        }
+                        break;
                     case "!URLS":
                         List<MatchedURL> rtnUrls = Config.MatchedURLs;
 
@@ -153,8 +186,10 @@ namespace BenBOT
                                 // Save Configuration
                                 Config.SaveConfig();
                             }
+                            else { BroadcastToAdmins("{0} attempted to force a channel join for channel {1} and is not an admin", e.Data.Nick, segments.Any() ? segments[1] : "<empty channel name>"); }
                         }
-                        catch { }
+                        catch
+                        {}
                         break;
                     case "!PART":
                         try
@@ -169,8 +204,12 @@ namespace BenBOT
                                 irc.RfcPart(partChan);
                                 Config.Settings.AutoJoinChannels.Remove(partChan);
                             }
+                            else { BroadcastToAdmins("{0} attempted to force a channel part for channel {1} and is not an admin", e.Data.Nick, segments.Any() ? segments[1] : "<empty channel name>"); }
                         }
-                        catch { }
+                        catch
+                        {
+                            
+                        }
                         break;
                     case "!SAVE":
                         try
@@ -272,7 +311,24 @@ namespace BenBOT
                         }
                         catch { }
                         break;
+                    case "!SETUP":
+                        // Should only be usable if no other admins are listed in the system
+                        if (Config.Settings.GetAdmins().Count == 0)
+                        {
+                            // no admins
+                            Config.Settings.KnownUsers.Add(new BotUser()
+                            {
+                                DefaultHost = e.Data.Host,
+                                Email = segments[1],
+                                IsAdmin = true,
+                                Nick = e.Data.Nick,
+                                Pass = segments[2]
+                            });
+                            Config.SaveConfig();
 
+                            irc.RfcPrivmsg(e.Data.Nick, "Thank you, you've been added to the bot as an admin. !SETUP will no longer allow admins to be added for security reasons.");
+                        }
+                        break;
                     case "!QUIT":
 
                         try
@@ -312,7 +368,23 @@ namespace BenBOT
                         Nick = e.Data.Nick,
                         URL = match.Value
                     });
-                    
+                    var action = Config.Settings.CheckActions(match.Value);
+                    if (action != null)
+                    {
+                        var user = Config.Settings.GetUser(e.Data.Nick);
+                        if(user!=null)
+                            if (user.IsAdmin)
+                                break;
+                        if (irc.GetChannelUser(e.Data.Channel, e.Data.Nick).IsOp)
+                            break;
+
+                        switch (action.Action.ToUpper())
+                        {
+                            case "KICK":
+                                irc.RfcKick(e.Data.Channel, e.Data.Nick, action.Reason);
+                                break;
+                        }
+                    }
                 }
             }
         }

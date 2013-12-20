@@ -81,6 +81,8 @@ namespace BenBOT
         public List<string> AutoJoinChannels {get;set;}
         public List<BotUser> KnownUsers { get; set; }
 
+        public List<ActionMatch> MatchActions { get; set; }
+
         public SMTPSettings SMTPSettings { get; set; }
 
         public BotSettings()
@@ -89,6 +91,7 @@ namespace BenBOT
             KnownUsers = new List<BotUser>();
             AutoJoinChannels = new List<string>();
             SMTPSettings = new SMTPSettings();
+            MatchActions = new List<ActionMatch>();
         }
 
         public BotUser GetUser(string nick)
@@ -99,6 +102,11 @@ namespace BenBOT
         public List<BotUser> GetAdmins()
         {
             return KnownUsers.Where(x => x.IsAdmin).ToList();
+        }
+
+        public ActionMatch CheckActions(string strToMatch)
+        {
+            return MatchActions.FirstOrDefault(x => strToMatch.Contains(x.MatchString));
         }
     }
 
@@ -111,5 +119,12 @@ namespace BenBOT
 
         // Can differ from username is SMTP Server allows
         public string DefaultEmailAddress { get; set; }
+    }
+
+    public class ActionMatch
+    {
+        public string MatchString { get; set; }
+        public string Action { get; set; }
+        public string Reason { get; set; }
     }
 }
