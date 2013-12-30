@@ -1,24 +1,21 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Net.Mail;
-
-using Meebey.SmartIrc4net;
-using System.Text.RegularExpressions;
-
 using System.Linq.Dynamic;
-
+using System.Net.Mail;
+using System.Text.RegularExpressions;
+using System.Threading;
+using Meebey.SmartIrc4net;
 
 namespace BenBOT
 {
-    class Program
+    internal class Program
     {
-
         public static IrcClient irc = new IrcClient();
         public static BotConfiguration Config = new BotConfiguration();
+        public static List<string> BlockedQueryKeywords = new List<string> {".padright", ".padleft", ".pad"};
 
-        static void Main(string[] args)
+        private static void Main(string[] args)
         {
             // Load the configuration File
             Config.LoadConfig();
@@ -35,7 +32,7 @@ namespace BenBOT
             irc.OnChannelMessage += irc_OnChannelMessage;
             irc.OnReadLine += irc_OnReadLine;
             irc.OnKick += irc_OnKick;
-
+            irc.OnBan += irc_OnBan;
 
             try
             {
@@ -43,7 +40,7 @@ namespace BenBOT
                 while (true)
                 {
                     irc.Listen(false);
-                    System.Threading.Thread.Sleep(10);
+                    Thread.Sleep(10);
                 }
             }
             catch (Exception ex)
@@ -51,10 +48,10 @@ namespace BenBOT
                 Console.WriteLine(ex.ToString());
                 Console.ReadKey();
             }
-
         }
 
-        public static void BroadcastToAdmins(string message, params string[] paramStrings)
+        
+        public static void BroadcastToAdmins(string message, params object[] paramStrings)
         {
             try
             {
@@ -71,14 +68,43 @@ namespace BenBOT
             }
         }
 
-        static public void ParseMessage(IrcEventArgs e)
+        public static bool IsQueryValid(string query)
+        {
+            return !BlockedQueryKeywords.Any(query.ToLower().Contains);
+        }
+
+        public static void ParseMessage(IrcEventArgs e)
         {
             if (e.Data.Message.StartsWith("!"))
             {
                 var user = Config.Settings.GetUser(e.Data.Nick);
+                if (user == null)
+                {
+                    // Add guest account for command tracking
+                    user = new BotUser()
+                    {
+                        Nick = e.Data.Nick,
+                        IsGuest = true
+                    };
+                    Config.Settings.KnownUsers.Add(user);
+                }
+
+                // If guest, enforce command limit
+                if(user.IsGuest)
+                    if (user.CommandsInLast(60) == 2)
+                    {
+                        irc.SendMessage(SendType.Message, e.Data.Nick, "Maximum commands per minute for guest reached.");
+                        user.CommandHistory.Add(new HistoryItem()
+                        {
+                            Command = e.Data.RawMessage,
+                            Created = DateTime.Now
+                        });
+                        return;
+                    }else if (user.CommandsInLast(60) > 2)
+                        return;
 
                 // Command
-                string[] segments = e.Data.Message.Split(new char[] { ' ' });
+                var segments = e.Data.Message.Split(new[] {' '});
                 switch (segments[0].ToUpper())
                 {
                     case "!ADDMATCH":
@@ -86,7 +112,7 @@ namespace BenBOT
                         {
                             try
                             {
-                                Config.Settings.MatchActions.Add(new ActionMatch()
+                                Config.Settings.MatchActions.Add(new ActionMatch
                                 {
                                     Action = segments[1],
                                     MatchString = segments[2],
@@ -94,20 +120,25 @@ namespace BenBOT
                                 });
                                 Config.SaveConfig();
                             }
-                            catch{}
+                            catch
+                            {
+                            }
                         }
                         break;
                     case "!URLS":
-                        List<MatchedURL> rtnUrls = Config.MatchedURLs;
+                        List<MatchedURL> rtnUrls;
 
                         rtnUrls = FilterURLs(segments).OrderByDescending(x => x.DateTime).Take(10).ToList();
 
-                        if (rtnUrls.Count() > 0)
+                        if (rtnUrls.Any())
                         {
-                            irc.SendMessage(SendType.Message, e.Data.Nick, string.Format("{0,-20}{1,-15}{2,-10}{3}", "Channel", "Nick", "Time", "URL"));
+                            irc.SendMessage(SendType.Message, e.Data.Nick,
+                                string.Format("{0,-20}{1,-15}{2,-10}{3}", "Channel", "Nick", "Time", "URL"));
                             foreach (var url in rtnUrls)
                             {
-                                irc.SendMessage(SendType.Message, e.Data.Nick, string.Format("{0,-20}{1,-15}{2,-10}{3}", url.Channel, url.Nick, url.DateTime.ToShortTimeString(), url.URL));
+                                irc.SendMessage(SendType.Message, e.Data.Nick,
+                                    string.Format("{0,-20}{1,-15}{2,-10}{3}", url.Channel, url.Nick,
+                                        url.DateTime.ToShortTimeString(), url.URL));
                             }
                         }
                         else
@@ -116,18 +147,20 @@ namespace BenBOT
                         }
                         break;
                     case "!QUERY":
-                        List<MatchedURL> rtn = Config.MatchedURLs;
+                        var rtn = Config.MatchedURLs;
                         try
                         {
                             string query = string.Empty;
-                            
+
                             switch (segments[1].ToUpper())
                             {
                                 case "SAVE":
                                     if (user != null)
                                     {
                                         query = string.Join(" ", segments.Skip(3));
-                                        user.SavedQueries.Add(new SavedQuery()
+                                        if (!IsQueryValid(query))
+                                            return;
+                                        user.SavedQueries.Add(new SavedQuery
                                         {
                                             Name = segments[2],
                                             Query = query
@@ -140,7 +173,8 @@ namespace BenBOT
                                 case "RUN":
                                     if (user != null)
                                     {
-                                        var savedquery = user.SavedQueries.Where(x => x.Name == segments[2]).SingleOrDefault();
+                                        var savedquery =
+                                            user.SavedQueries.SingleOrDefault(x => x.Name == segments[2]);
                                         if (savedquery != null)
                                             query = savedquery.Query;
                                         else
@@ -152,16 +186,21 @@ namespace BenBOT
                                     break;
                                 default:
                                     query = string.Join(" ", segments.Skip(1));
+                                    if (!IsQueryValid(query))
+                                        return;
                                     break;
                             }
 
-                            rtn = rtn.AsQueryable().Where(query).ToList();
-                            if (rtn.Count() > 0)
+                            rtn = rtn.AsQueryable().Where(query).Take(10).ToList();
+                            if (rtn.Any())
                             {
-                                irc.SendMessage(SendType.Message, e.Data.Nick, string.Format("{0,-20}{1,-15}{2,-10}{3}", "Channel", "Nick", "Time", "URL"));
+                                irc.SendMessage(SendType.Message, e.Data.Nick,
+                                    string.Format("{0,-20}{1,-15}{2,-10}{3}", "Channel", "Nick", "Time", "URL"));
                                 foreach (var url in rtn)
                                 {
-                                    irc.SendMessage(SendType.Message, e.Data.Nick, string.Format("{0,-20}{1,-15}{2,-10}{3}", url.Channel, url.Nick, url.DateTime.ToShortTimeString(), url.URL));
+                                    irc.SendMessage(SendType.Message, e.Data.Nick,
+                                        string.Format("{0,-20}{1,-15}{2,-10}{3}", url.Channel, url.Nick,
+                                            url.DateTime.ToShortTimeString(), url.URL));
                                 }
                             }
                             else
@@ -185,30 +224,41 @@ namespace BenBOT
 
                                 // Save Configuration
                                 Config.SaveConfig();
+
+                                BroadcastToAdmins("Joined channel {0} by {1}", segments[1], e.Data.Nick);
                             }
-                            else { BroadcastToAdmins("{0} attempted to force a channel join for channel {1} and is not an admin", e.Data.Nick, segments.Any() ? segments[1] : "<empty channel name>"); }
+                            else
+                            {
+                                BroadcastToAdmins(
+                                    "{0} attempted to force a channel join for channel {1} and is not an admin",
+                                    e.Data.Nick, segments.Any() ? segments[1] : "<empty channel name>");
+                            }
                         }
                         catch
-                        {}
+                        {
+                        }
                         break;
                     case "!PART":
                         try
                         {
                             if (user.IsAdmin)
                             {
-                                string partChan = string.Empty;
-                                if (segments.Count() > 1)
-                                    partChan = segments[1];
-                                else
-                                    partChan = e.Data.Channel;
+                                var partChan = string.Empty;
+                                partChan = segments.Count() > 1 ? segments[1] : e.Data.Channel;
                                 irc.RfcPart(partChan);
                                 Config.Settings.AutoJoinChannels.Remove(partChan);
+
+                                BroadcastToAdmins("Parted channel {0} by {1}", segments[1], e.Data.Nick);
                             }
-                            else { BroadcastToAdmins("{0} attempted to force a channel part for channel {1} and is not an admin", e.Data.Nick, segments.Any() ? segments[1] : "<empty channel name>"); }
+                            else
+                            {
+                                BroadcastToAdmins(
+                                    "{0} attempted to force a channel part for channel {1} and is not an admin",
+                                    e.Data.Nick, segments.Any() ? segments[1] : "<empty channel name>");
+                            }
                         }
                         catch
                         {
-                            
                         }
                         break;
                     case "!SAVE":
@@ -219,29 +269,35 @@ namespace BenBOT
                                 Config.SaveConfig();
                             }
                         }
-                        catch { }
+                        catch
+                        {
+                        }
                         break;
                     case "!URLSTATS":
                         var stats = from x in FilterURLs(segments)
-                                    group x by x.Channel into xG
-                                    select new
-                                    {
-                                        Channel = xG.Key,
-                                        URLCount = xG.Count()
-                                    };
-                        irc.SendMessage(SendType.Message, e.Data.Nick, "Current URL Cache Size: " + Config.MatchedURLs.Count().ToString());
+                            group x by x.Channel
+                            into xG
+                            select new
+                            {
+                                Channel = xG.Key,
+                                URLCount = xG.Count()
+                            };
+                        irc.SendMessage(SendType.Message, e.Data.Nick,
+                            "Current URL Cache Size: " + Config.MatchedURLs.Count());
 
-                        irc.SendMessage(SendType.Message, e.Data.Nick, string.Format("{0,-20}{1,-10}", "Channel", "URL Count"));
+                        irc.SendMessage(SendType.Message, e.Data.Nick,
+                            string.Format("{0,-20}{1,-10}", "Channel", "URL Count"));
                         foreach (var item in stats)
                         {
-                            irc.SendMessage(SendType.Message, e.Data.Nick, string.Format("{0,-20}{1,-10}", item.Channel, item.URLCount.ToString()));
+                            irc.SendMessage(SendType.Message, e.Data.Nick,
+                                string.Format("{0,-20}{1,-10}", item.Channel, item.URLCount));
                         }
 
                         break;
                     case "!REGISTER":
                         try
                         {
-                            Config.Settings.KnownUsers.Add(new BotUser()
+                            Config.Settings.KnownUsers.Add(new BotUser
                             {
                                 DefaultHost = e.Data.Host,
                                 Email = segments[1],
@@ -250,34 +306,41 @@ namespace BenBOT
                                 Pass = segments[2]
                             });
 
-                            irc.SendMessage(SendType.Message, e.Data.Nick, string.Format("Welcome {0}, we've registered you with the following email address {1}.", e.Data.Nick, segments[1]));
+                            irc.SendMessage(SendType.Message, e.Data.Nick,
+                                string.Format(
+                                    "Welcome {0}, we've registered you with the following email address {1}.",
+                                    e.Data.Nick, segments[1]));
 
                             Config.SaveConfig();
                         }
-                        catch { }
+                        catch
+                        {
+                        }
                         break;
                     case "!EMAIL":
                         try
                         {
                             if (user != null)
                             {
-                                string body = string.Empty;
+                                var body = string.Empty;
                                 var urls = FilterURLs(segments);
-                                foreach (var item in urls)
-                                {
-                                    body += string.Format("{0,-10} {1,-6} {2}\n", item.Channel, item.DateTime.ToShortTimeString(), item.URL);
-                                }
-                                MailMessage mm = new MailMessage(Config.Settings.SMTPSettings.DefaultEmailAddress, user.Email, "URL List", body);
+                                body = urls.Aggregate(body, (current, item) => current + string.Format("{0,-10} {1,-6} {2}\n", 
+                                    item.Channel, item.DateTime.ToShortTimeString(), item.URL));
 
-                                SmtpClient smtp = new SmtpClient(Config.Settings.SMTPSettings.SMTPHost);
+                                var mm = new MailMessage(Config.Settings.SMTPSettings.DefaultEmailAddress, user.Email,
+                                    "URL List", body);
+
+                                var smtp = new SmtpClient(Config.Settings.SMTPSettings.SMTPHost);
                                 smtp.Send(mm);
                             }
                             else
                             {
-                                irc.SendMessage(SendType.Message, e.Data.Nick, "Not Registered! Use !register <emailaddress> <password>");
+                                irc.SendMessage(SendType.Message, e.Data.Nick,
+                                    "Not Registered! Use !register <emailaddress> <password>");
                             }
                         }
-                        catch(Exception ex) {
+                        catch (Exception ex)
+                        {
                             Console.WriteLine(ex.Message);
                         }
                         break;
@@ -293,30 +356,34 @@ namespace BenBOT
                                 }
                             }
                         }
-                        catch { }
+                        catch
+                        {
+                        }
                         break;
                     case "!DUMP":
                         try
                         {
-                            if (user!=null && user.IsAdmin)
+                            if (user != null && user.IsAdmin)
                             {
                                 // Dump all url information to XML
                                 Config.SaveURLs();
-                                
-                                
-                                string response = string.Format("Dumped {0} URLs", Config.MatchedURLs.Count());
+
+
+                                var response = string.Format("Dumped {0} URLs", Config.MatchedURLs.Count());
                                 Console.WriteLine(response);
                                 irc.SendMessage(SendType.Message, e.Data.Nick, response);
                             }
                         }
-                        catch { }
+                        catch
+                        {
+                        }
                         break;
                     case "!SETUP":
                         // Should only be usable if no other admins are listed in the system
                         if (Config.Settings.GetAdmins().Count == 0)
                         {
                             // no admins
-                            Config.Settings.KnownUsers.Add(new BotUser()
+                            Config.Settings.KnownUsers.Add(new BotUser
                             {
                                 DefaultHost = e.Data.Host,
                                 Email = segments[1],
@@ -326,7 +393,8 @@ namespace BenBOT
                             });
                             Config.SaveConfig();
 
-                            irc.RfcPrivmsg(e.Data.Nick, "Thank you, you've been added to the bot as an admin. !SETUP will no longer allow admins to be added for security reasons.");
+                            irc.RfcPrivmsg(e.Data.Nick,
+                                "Thank you, you've been added to the bot as an admin. !SETUP will no longer allow admins to be added for security reasons.");
                         }
                         break;
                     case "!QUIT":
@@ -338,30 +406,45 @@ namespace BenBOT
                                 // Quits the bot
                                 Config.SaveURLs();
                                 irc.Disconnect();
-                                System.Environment.Exit(0);
+                                Environment.Exit(0);
                             }
                         }
-                        catch { }
+                        catch
+                        {
+                        }
 
                         break;
                     case "!HELP":
                         irc.SendMessage(SendType.Message, e.Data.Nick, "urlbot Help");
-                        irc.SendMessage(SendType.Message, e.Data.Nick, string.Format("{0,-20}{1}", "!urls", "Returns a list of URLs that have been captured"));
-                        irc.SendMessage(SendType.Message, e.Data.Nick, string.Format("{0,-20}{1}", "-- matching", "Single keyword search. E.g. \"matching foobar\""));
-                        irc.SendMessage(SendType.Message, e.Data.Nick, string.Format("{0,-20}{1}", "-- last", "Denotes a time period. last [nterval] [interval type]"));
+                        irc.SendMessage(SendType.Message, e.Data.Nick,
+                            string.Format("{0,-20}{1}", "!urls", "Returns a list of URLs that have been captured"));
+                        irc.SendMessage(SendType.Message, e.Data.Nick,
+                            string.Format("{0,-20}{1}", "-- matching", "Single keyword search. E.g. \"matching foobar\""));
+                        irc.SendMessage(SendType.Message, e.Data.Nick,
+                            string.Format("{0,-20}{1}", "-- last",
+                                "Denotes a time period. last [nterval] [interval type]"));
                         break;
                 }
+
+                // Add command to history tracker
+                user.CommandHistory.Add(new HistoryItem()
+                {
+                    Command = e.Data.Message,
+                    Created = DateTime.Now
+                });
             }
             else
             {
                 // To be parsed for data
-                Regex regx = new Regex("(http|https)://([\\w+?\\.\\w+])+([a-zA-Z0-9\\~\\!\\@\\#\\$\\%\\^\\&amp;\\*\\(\\)_\\-\\=\\+\\\\\\/\\?\\.\\:\\;\\'\\,]*)?", RegexOptions.IgnoreCase);        
-                MatchCollection mactches = regx.Matches(e.Data.Message);
+                var regx =
+                    new Regex(
+                        "(http|https)://([\\w+?\\.\\w+])+([a-zA-Z0-9\\~\\!\\@\\#\\$\\%\\^\\&amp;\\*\\(\\)_\\-\\=\\+\\\\\\/\\?\\.\\:\\;\\'\\,]*)?",
+                        RegexOptions.IgnoreCase);
+                var mactches = regx.Matches(e.Data.Message);
                 foreach (Match match in mactches)
                 {
-                   
                     Console.WriteLine("Found URL: " + match.Value);
-                    Config.MatchedURLs.Add(new MatchedURL()
+                    Config.MatchedURLs.Add(new MatchedURL
                     {
                         Channel = e.Data.Channel,
                         DateTime = DateTime.Now,
@@ -369,21 +452,20 @@ namespace BenBOT
                         URL = match.Value
                     });
                     var action = Config.Settings.CheckActions(match.Value);
-                    if (action != null)
-                    {
-                        var user = Config.Settings.GetUser(e.Data.Nick);
-                        if(user!=null)
-                            if (user.IsAdmin)
-                                break;
-                        if (irc.GetChannelUser(e.Data.Channel, e.Data.Nick).IsOp)
+                    
+                    if (action == null) continue;
+                    var user = Config.Settings.GetUser(e.Data.Nick);
+                    if (user != null)
+                        if (user.IsAdmin)
                             break;
+                    if (irc.GetChannelUser(e.Data.Channel, e.Data.Nick).IsOp)
+                        break;
 
-                        switch (action.Action.ToUpper())
-                        {
-                            case "KICK":
-                                irc.RfcKick(e.Data.Channel, e.Data.Nick, action.Reason);
-                                break;
-                        }
+                    switch (action.Action.ToUpper())
+                    {
+                        case "KICK":
+                            irc.RfcKick(e.Data.Channel, e.Data.Nick, action.Reason);
+                            break;
                     }
                 }
             }
@@ -425,19 +507,30 @@ namespace BenBOT
                                     switch (type)
                                     {
                                         case "days":
-                                        case "day": searchPeriod = interval * 60 * 60 * 24; break;
+                                        case "day":
+                                            searchPeriod = interval*60*60*24;
+                                            break;
                                         case "hours":
-                                        case "hour": searchPeriod = interval * 60 * 60; break;
+                                        case "hour":
+                                            searchPeriod = interval*60*60;
+                                            break;
                                         case "minutes":
                                         case "min":
-                                        case "mins": searchPeriod = interval * 60; break;
+                                        case "mins":
+                                            searchPeriod = interval*60;
+                                            break;
                                         case "seconds":
                                         case "sec":
-                                        case "secs": searchPeriod = interval; break;
+                                        case "secs":
+                                            searchPeriod = interval;
+                                            break;
                                     }
-                                    rtnUrls = rtnUrls.Where(x => x.DateTime > DateTime.Now.AddSeconds(-searchPeriod)).ToList();
+                                    rtnUrls =
+                                        rtnUrls.Where(x => x.DateTime > DateTime.Now.AddSeconds(-searchPeriod)).ToList();
                                 }
-                                catch { }
+                                catch
+                                {
+                                }
                                 break;
                         }
                     }
@@ -452,47 +545,58 @@ namespace BenBOT
         }
 
         #region IRC Events
-        static void irc_OnKick(object sender, KickEventArgs e)
+
+        private static void irc_OnKick(object sender, KickEventArgs e)
         {
+            BroadcastToAdmins("Kicked from channel {0} by {1}: {2}", e.Channel, e.Whom, e.KickReason);
             // Auto rejoin channel
             irc.RfcJoin(e.Channel);
         }
 
-        static void irc_OnReadLine(object sender, ReadLineEventArgs e)
+        private static void irc_OnReadLine(object sender, ReadLineEventArgs e)
         {
             Console.WriteLine("-- " + e.Line);
         }
 
-        static void irc_OnErrorMessage(object sender, IrcEventArgs e)
+        private static void irc_OnErrorMessage(object sender, IrcEventArgs e)
         {
             Console.WriteLine(e.Data.Message);
         }
 
-        static void irc_OnConnectionError(object sender, EventArgs e)
+        private static void irc_OnConnectionError(object sender, EventArgs e)
         {
             Console.WriteLine("COnnection Error");
         }
 
-        static void irc_OnChannelMessage(object sender, IrcEventArgs e)
+        private static void irc_OnChannelMessage(object sender, IrcEventArgs e)
         {
             ParseMessage(e);
         }
 
-        static void irc_OnQueryMessage(object sender, IrcEventArgs e)
+        private static void irc_OnQueryMessage(object sender, IrcEventArgs e)
         {
             ParseMessage(e);
         }
 
-        static void irc_OnConnected(object sender, EventArgs e)
+        private static void irc_OnConnected(object sender, EventArgs e)
         {
             irc.Login(Config.Settings.BotName, "Stupid Bot");
 
-            foreach (var chan in Config.Settings.AutoJoinChannels)
+            foreach (string chan in Config.Settings.AutoJoinChannels)
             {
                 irc.RfcJoin(chan);
             }
-            
-        } 
+        }
+
+        static void irc_OnBan(object sender, BanEventArgs e)
+        {
+            if (e.Hostmask.Contains(irc.Nickname))
+            {
+                BroadcastToAdmins("banned from channel {0} by {1}: {2}", e.Channel, e.Who, e.Hostmask);
+                irc.Unban(e.Channel, e.Hostmask);
+            }
+        }
+
         #endregion
     }
 }

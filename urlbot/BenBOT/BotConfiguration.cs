@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Text;
 using System.Xml.Serialization;
 
@@ -73,58 +72,5 @@ namespace BenBOT
             }
         }
 
-    }
-
-    public class BotSettings
-    {
-        public string BotName { get; set; }
-        public List<string> AutoJoinChannels {get;set;}
-        public List<BotUser> KnownUsers { get; set; }
-
-        public List<ActionMatch> MatchActions { get; set; }
-
-        public SMTPSettings SMTPSettings { get; set; }
-
-        public BotSettings()
-        {
-            BotName = "urlbot";
-            KnownUsers = new List<BotUser>();
-            AutoJoinChannels = new List<string>();
-            SMTPSettings = new SMTPSettings();
-            MatchActions = new List<ActionMatch>();
-        }
-
-        public BotUser GetUser(string nick)
-        {
-            return KnownUsers.Where(x => x.Nick == nick).SingleOrDefault();
-        }
-
-        public List<BotUser> GetAdmins()
-        {
-            return KnownUsers.Where(x => x.IsAdmin).ToList();
-        }
-
-        public ActionMatch CheckActions(string strToMatch)
-        {
-            return MatchActions.FirstOrDefault(x => strToMatch.Contains(x.MatchString));
-        }
-    }
-
-    public class SMTPSettings
-    {
-        public string SMTPHost { get; set; }
-        public int SMTPPort { get; set; }
-        public string SMTPUsername { get; set; }
-        public string SMTPPassword { get; set; }
-
-        // Can differ from username is SMTP Server allows
-        public string DefaultEmailAddress { get; set; }
-    }
-
-    public class ActionMatch
-    {
-        public string MatchString { get; set; }
-        public string Action { get; set; }
-        public string Reason { get; set; }
     }
 }

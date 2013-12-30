@@ -48,11 +48,14 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="BotAdmin.cs" />
+    <Compile Include="ActionMatch.cs" />
+    <Compile Include="BotUser.cs" />
     <Compile Include="BotConfiguration.cs" />
+    <Compile Include="BotSettings.cs" />
     <Compile Include="MatchedURL.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="SMTPSettings.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

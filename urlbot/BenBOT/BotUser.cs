@@ -11,6 +11,7 @@ namespace BenBOT
         public BotUser()
         {
             SavedQueries = new List<SavedQuery>();
+            CommandHistory = new List<HistoryItem>();
         }
 
         public string Nick { get; set; }
@@ -19,7 +20,21 @@ namespace BenBOT
         public string DefaultHost { get; set; }
         public bool IsAdmin { get; set; }
 
+        public bool IsGuest { get; set; }
+
         public List<SavedQuery> SavedQueries { get; set; }
+        public List<HistoryItem> CommandHistory { get; set; }
+
+        public int CommandsInLast(int seconds)
+        {
+            return CommandHistory.Count(x => x.Created >= DateTime.Now.AddSeconds(-seconds));
+        }
+    }
+
+    public class HistoryItem
+    {
+        public DateTime Created { get; set; }
+        public string Command { get; set; }
     }
 
     public class SavedQuery
