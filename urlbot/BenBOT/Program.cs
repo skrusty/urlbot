@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Configuration;
 using System.Linq;
 using System.Linq.Dynamic;
 using System.Net.Mail;
@@ -138,7 +139,7 @@ namespace BenBOT
                             {
                                 irc.SendMessage(SendType.Message, e.Data.Nick,
                                     string.Format("{0,-20}{1,-15}{2,-10}{3}", url.Channel, url.Nick,
-                                        url.DateTime.ToShortTimeString(), url.URL));
+                                        url.DateTime.ToString("g"), url.URL));
                             }
                         }
                         else
@@ -200,7 +201,7 @@ namespace BenBOT
                                 {
                                     irc.SendMessage(SendType.Message, e.Data.Nick,
                                         string.Format("{0,-20}{1,-15}{2,-10}{3}", url.Channel, url.Nick,
-                                            url.DateTime.ToShortTimeString(), url.URL));
+                                            url.DateTime.ToString("g"), url.URL));
                                 }
                             }
                             else
@@ -297,14 +298,31 @@ namespace BenBOT
                     case "!REGISTER":
                         try
                         {
-                            Config.Settings.KnownUsers.Add(new BotUser
+                            var newUser = Config.Settings.KnownUsers.SingleOrDefault(x => x.Nick == e.Data.Nick);
+                            if (newUser == null)
                             {
-                                DefaultHost = e.Data.Host,
-                                Email = segments[1],
-                                IsAdmin = false,
-                                Nick = e.Data.Nick,
-                                Pass = segments[2]
-                            });
+                                newUser = new BotUser
+                                {
+                                    DefaultHost = e.Data.Host,
+                                    Email = segments[1],
+                                    IsAdmin = false,
+                                    Nick = e.Data.Nick,
+                                    Pass = segments[2]
+                                };
+                            }
+                            else if(newUser.IsGuest)
+                            {
+                                newUser.DefaultHost = e.Data.Host;
+                                newUser.Email = segments[1];
+                                newUser.IsAdmin = false;
+                                newUser.Nick = e.Data.Nick;
+                                newUser.Pass = segments[2];
+                                newUser.IsGuest = false;
+                            }
+                            else
+                            {
+                                // user already registered
+                            }
 
                             irc.SendMessage(SendType.Message, e.Data.Nick,
                                 string.Format(
@@ -360,6 +378,36 @@ namespace BenBOT
                         {
                         }
                         break;
+                    case "!HISTORY":
+                        try
+                        {
+                            if (user != null && user.IsAdmin)
+                            {
+                                List<HistoryItem> history = new List<HistoryItem>();
+                                if (segments.Count() > 1)
+                                {
+                                    var histNick = segments[1];
+                                    var botUser = Config.Settings.KnownUsers.SingleOrDefault(x => x.Nick == histNick);
+                                    if (botUser != null)
+                                        history = botUser.CommandHistory.Take(10).ToList();
+                                }
+                                else
+                                    history = Config.Settings.KnownUsers.SelectMany(x => x.CommandHistory).Take(10).ToList();
+
+                                if (history != null)
+                                {
+                                    irc.SendMessage(SendType.Message, e.Data.Nick, "Command History List (last 10):");
+                                    history.ToList().ForEach(x =>
+                                        irc.SendMessage(SendType.Message, e.Data.Nick, string.Format("{0,-10}{1}", x.Created.ToString("g"), x.Command))
+                                    );
+                                }else
+                                    irc.SendMessage(SendType.Message, e.Data.Nick, "No history to display");
+                            }
+                        }
+                        catch
+                        {
+                        }
+                        break;
                     case "!DUMP":
                         try
                         {
@@ -368,10 +416,7 @@ namespace BenBOT
                                 // Dump all url information to XML
                                 Config.SaveURLs();
 
-
-                                var response = string.Format("Dumped {0} URLs", Config.MatchedURLs.Count());
-                                Console.WriteLine(response);
-                                irc.SendMessage(SendType.Message, e.Data.Nick, response);
+                                BroadcastToAdmins("Dumped {0} URLs", Config.MatchedURLs.Count());
                             }
                         }
                         catch
@@ -398,13 +443,14 @@ namespace BenBOT
                         }
                         break;
                     case "!QUIT":
-
                         try
                         {
                             if (user != null && user.IsAdmin)
                             {
                                 // Quits the bot
                                 Config.SaveURLs();
+                                if(segments.Count() > 1)
+                                    irc.RfcQuit(string.Join(" ", segments.Take(1)));
                                 irc.Disconnect();
                                 Environment.Exit(0);
                             }
@@ -422,7 +468,7 @@ namespace BenBOT
                             string.Format("{0,-20}{1}", "-- matching", "Single keyword search. E.g. \"matching foobar\""));
                         irc.SendMessage(SendType.Message, e.Data.Nick,
                             string.Format("{0,-20}{1}", "-- last",
-                                "Denotes a time period. last [nterval] [interval type]"));
+                                "Denotes a time period. last [interval] [interval type]"));
                         break;
                 }
 
@@ -471,9 +517,9 @@ namespace BenBOT
             }
         }
 
-        private static List<MatchedURL> FilterURLs(string[] segments)
+        private static IEnumerable<MatchedURL> FilterURLs(string[] segments)
         {
-            List<MatchedURL> rtnUrls = Config.MatchedURLs;
+            var rtnUrls = Config.MatchedURLs;
             try
             {
                 // Loop from the next segment on
@@ -501,9 +547,9 @@ namespace BenBOT
                             case "LAST":
                                 try
                                 {
-                                    int interval = int.Parse(segments[++i]);
-                                    string type = segments[++i];
-                                    int searchPeriod = 0;
+                                    var interval = int.Parse(segments[++i]);
+                                    var type = segments[++i];
+                                    var searchPeriod = 0;
                                     switch (type)
                                     {
                                         case "days":
@@ -590,6 +636,7 @@ namespace BenBOT
 
         static void irc_OnBan(object sender, BanEventArgs e)
         {
+            // need a way to compare mask to current ident?
             if (e.Hostmask.Contains(irc.Nickname))
             {
                 BroadcastToAdmins("banned from channel {0} by {1}: {2}", e.Channel, e.Who, e.Hostmask);
