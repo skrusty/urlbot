@@ -1,18 +1,11 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using BenBOT.Models;
 
-namespace BenBOT
+namespace BenBOT.Configuration
 {
     public class BotSettings
     {
-        public string BotName { get; set; }
-        public List<string> AutoJoinChannels {get;set;}
-        public List<BotUser> KnownUsers { get; set; }
-
-        public List<ActionMatch> MatchActions { get; set; }
-
-        public SMTPSettings SMTPSettings { get; set; }
-
         public BotSettings()
         {
             BotName = "urlbot";
@@ -21,6 +14,14 @@ namespace BenBOT
             SMTPSettings = new SMTPSettings();
             MatchActions = new List<ActionMatch>();
         }
+
+        public string BotName { get; set; }
+        public List<string> AutoJoinChannels { get; set; }
+        public List<BotUser> KnownUsers { get; set; }
+
+        public List<ActionMatch> MatchActions { get; set; }
+
+        public SMTPSettings SMTPSettings { get; set; }
 
         public BotUser GetUser(string nick)
         {

@@ -1,26 +1,40 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
-using System.Text;
 using System.Xml.Serialization;
+using BenBOT.Models;
 
-namespace BenBOT
+namespace BenBOT.Configuration
 {
     public class BotConfiguration
     {
+        private static BotConfiguration _Current;
 
-        public BotSettings Settings;
         public List<MatchedURL> MatchedURLs = new List<MatchedURL>();
+        public BotSettings Settings;
 
-        public void LoadConfig() 
+        public static BotConfiguration Current
+        {
+            get
+            {
+                if (_Current == null)
+                {
+                    _Current = new BotConfiguration();
+                    _Current.LoadConfig();
+                    _Current.LoadURLs();
+                }
+                return _Current;
+            }
+        }
+
+        public void LoadConfig()
         {
             // Load Config File
-            XmlSerializer xs = new XmlSerializer(typeof(BotSettings));
+            var xs = new XmlSerializer(typeof (BotSettings));
             try
             {
                 using (FileStream fs = File.OpenRead("Settings.xml"))
                 {
-                    Settings = (BotSettings)xs.Deserialize(fs);
+                    Settings = (BotSettings) xs.Deserialize(fs);
                 }
             }
             catch
@@ -32,7 +46,7 @@ namespace BenBOT
         public void SaveConfig()
         {
             // Save Application Config File
-            XmlSerializer xs = new XmlSerializer(typeof(BotSettings));
+            var xs = new XmlSerializer(typeof (BotSettings));
             using (FileStream fs = File.Open("Settings.xml", FileMode.Create, FileAccess.Write, FileShare.None))
             {
                 lock (Settings)
@@ -45,12 +59,12 @@ namespace BenBOT
         public void LoadURLs()
         {
             // Load Config File
-            XmlSerializer xs = new XmlSerializer(typeof(List<MatchedURL>));
+            var xs = new XmlSerializer(typeof (List<MatchedURL>));
             try
             {
                 using (FileStream fs = File.OpenRead("URLs.xml"))
                 {
-                    MatchedURLs = (List<MatchedURL>)xs.Deserialize(fs);
+                    MatchedURLs = (List<MatchedURL>) xs.Deserialize(fs);
                 }
             }
             catch
@@ -62,7 +76,7 @@ namespace BenBOT
         public void SaveURLs()
         {
             // Save Application Config File
-            XmlSerializer xs = new XmlSerializer(typeof(List<MatchedURL>));
+            var xs = new XmlSerializer(typeof (List<MatchedURL>));
             using (FileStream fs = File.Open("URLs.xml", FileMode.Create, FileAccess.Write, FileShare.None))
             {
                 lock (MatchedURLs)
@@ -71,6 +85,5 @@ namespace BenBOT
                 }
             }
         }
-
     }
 }

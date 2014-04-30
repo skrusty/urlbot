@@ -1,4 +1,4 @@
-﻿namespace BenBOT
+﻿namespace BenBOT.Configuration
 {
     public class SMTPSettings
     {

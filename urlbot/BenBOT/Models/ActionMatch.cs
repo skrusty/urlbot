@@ -1,4 +1,4 @@
-﻿namespace BenBOT
+﻿namespace BenBOT.Models
 {
     public class ActionMatch
     {
