@@ -112,7 +112,7 @@ namespace BenBOT.BotCommands
                             switch (segments[2].ToUpper())
                             {
                                 case "MOD":
-
+                                    permUser.IsModerator = op;
                                     break;
                                 case "ADM":
                                     permUser.IsAdmin = op;
