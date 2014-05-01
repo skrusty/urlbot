@@ -69,6 +69,10 @@ namespace BenBOT.BotListeners
         public DateTime Date { get; set; }
         public string Action { get; set; }
 
+        public UserActivityItem()
+        {
+        }
+
         public UserActivityItem(string channel, string action, DateTime date)
         {
             Channel = channel;
