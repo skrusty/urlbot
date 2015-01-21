@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Xml.Serialization;
 
 namespace BenBOT.Configuration
 {
@@ -18,8 +16,7 @@ namespace BenBOT.Configuration
             _configProvider = configProvider;
 
             // pre load the BotSettings class
-            var settings = (BotSettings)LoadConfig<BotSettings>("config");
-            Settings = settings ?? new BotSettings();
+            RegisterConfig<BotSettings>("config", new BotSettings());
         }
 
         public static BotConfiguration Current { get; set; }
@@ -45,9 +42,9 @@ namespace BenBOT.Configuration
 
             // if it doesn't exist, pre-populate it with the configObject
             if (config == null)
-                _configObjects.Add(configName, new Tuple<object, Type>(configObject, typeof (T)));
+                _configObjects.Add(configName, configObject);
             else
-                _configObjects.Add(configName, new Tuple<object, Type>(config, typeof (T)));
+                _configObjects.Add(configName, config);
         }
 
         public void SaveConfig<T>(string configName) where T : class
@@ -64,7 +61,7 @@ namespace BenBOT.Configuration
             if (!_configObjects.ContainsKey(configName))
                 throw new Exception("Config not found");
 
-            return (T) _configProvider.LoadConfiguration<T>(configName);
+            return _configProvider.LoadConfiguration<T>(configName);
         }
     }
 }

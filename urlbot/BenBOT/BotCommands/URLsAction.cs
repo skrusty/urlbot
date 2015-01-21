@@ -28,7 +28,7 @@ namespace BenBOT.BotCommands
                 {
                     irc.SendMessage(SendType.Message, senderData.Nick,
                         string.Format("{0,-20}{1,-20}{2,-10}{3}", "Channel", "Nick", "Time", "URL"));
-                    foreach (MatchedURL url in rtnUrls)
+                    foreach (var url in rtnUrls)
                     {
                         irc.SendMessage(SendType.Message, senderData.Nick,
                             string.Format("{0,-20}{1,-20}{2,-10}{3}", url.Channel, url.Nick,

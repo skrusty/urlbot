@@ -28,7 +28,7 @@ namespace BenBOT.BotCommands
                         if (user.IsAdmin)
                         {
                             irc.SendMessage(SendType.Message, senderData.Nick, "Active Channel List:");
-                            foreach (string chan in irc.GetChannels())
+                            foreach (var chan in irc.GetChannels())
                             {
                                 irc.SendMessage(SendType.Message, senderData.Nick, chan);
                             }
@@ -131,19 +131,8 @@ namespace BenBOT.BotCommands
                         {
                             if (segments.Count() == 1)
                             {
-                                BotConfiguration.Current.Settings = BotConfiguration.Current.LoadConfig<BotSettings>("config");
-                            }
-                            else
-                            {
-                                //switch (segments[1].ToUpper())
-                                //{
-                                //    case "CONFIG":
-                                //        BotConfiguration.Current.LoadConfig();
-                                //        break;
-                                //    case "URLS":
-                                //        BotConfiguration.Current.LoadURLs();
-                                //        break;
-                                //}
+                                BotConfiguration.Current.Settings =
+                                    BotConfiguration.Current.LoadConfig<BotSettings>("config");
                             }
                             BotUser.BroadcastToAdmins(irc, "{0} forced a reload.", senderData.Nick);
                         }

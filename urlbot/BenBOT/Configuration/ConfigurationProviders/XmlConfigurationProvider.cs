@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
+﻿using System.IO;
 using System.Xml.Serialization;
 
 namespace BenBOT.Configuration.ConfigurationProviders
@@ -12,7 +8,7 @@ namespace BenBOT.Configuration.ConfigurationProviders
         public void SaveConfiguration<T>(object configObject, string configName)
         {
             // Save Application Config File
-            var xs = new XmlSerializer(typeof(T));
+            var xs = new XmlSerializer(typeof (T));
             using (var fs = File.Open(configName + ".xml", FileMode.Create, FileAccess.Write, FileShare.None))
             {
                 lock (configObject)
@@ -22,15 +18,15 @@ namespace BenBOT.Configuration.ConfigurationProviders
             }
         }
 
-        public T LoadConfiguration<T>(string configName) where T: class
+        public T LoadConfiguration<T>(string configName) where T : class
         {
             // Load Config File
-            var xs = new XmlSerializer(typeof(T));
+            var xs = new XmlSerializer(typeof (T));
             try
             {
                 using (var fs = File.OpenRead(configName + ".xml"))
                 {
-                    return (T)xs.Deserialize(fs);
+                    return (T) xs.Deserialize(fs);
                 }
             }
             catch

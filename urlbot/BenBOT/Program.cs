@@ -40,12 +40,12 @@ namespace BenBOT
             Irc.OnBan += irc_OnBan;
 
             LoadBotCommands();
-            
+
 
             try
             {
                 Irc.Connect("port80a.se.quakenet.org", 6667);
-                
+
                 LoadBotListeners();
 
                 while (true)
@@ -68,9 +68,9 @@ namespace BenBOT
                     .GetTypes()
                     .Where(t => String.Equals(t.Namespace, "BenBOT.BotCommands", StringComparison.Ordinal))
                     .ToArray();
-            foreach (Type cmd in botCommands)
+            foreach (var cmd in botCommands)
             {
-                if (cmd.GetInterfaces().Contains(typeof(IBotCommand)))
+                if (cmd.GetInterfaces().Contains(typeof (IBotCommand)))
                     BotCommands.Add((IBotCommand) Assembly.GetCallingAssembly().CreateInstance(cmd.FullName));
             }
         }
@@ -82,7 +82,7 @@ namespace BenBOT
                     .GetTypes()
                     .Where(t => String.Equals(t.Namespace, "BenBOT.BotListeners", StringComparison.Ordinal))
                     .ToArray();
-            foreach (Type cmd in botCommands)
+            foreach (var cmd in botCommands)
             {
                 if (cmd.GetInterfaces().Contains(typeof (IBotListener)))
                 {
@@ -203,7 +203,7 @@ namespace BenBOT
         {
             Irc.Login(BotConfiguration.Current.Settings.BotName, "Stupid Bot");
 
-            foreach (string chan in BotConfiguration.Current.Settings.AutoJoinChannels)
+            foreach (var chan in BotConfiguration.Current.Settings.AutoJoinChannels)
             {
                 Irc.RfcJoin(chan);
             }

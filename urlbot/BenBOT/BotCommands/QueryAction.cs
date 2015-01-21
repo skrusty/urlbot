@@ -69,7 +69,7 @@ namespace BenBOT.BotCommands
                 {
                     irc.SendMessage(SendType.Message, senderData.Nick,
                         string.Format("{0,-20}{1,-20}{2,-10}{3}", "Channel", "Nick", "Time", "URL"));
-                    foreach (MatchedURL url in rtn)
+                    foreach (var url in rtn)
                     {
                         irc.SendMessage(SendType.Message, senderData.Nick,
                             string.Format("{0,-20}{1,-20}{2,-10}{3}", url.Channel, url.Nick,
