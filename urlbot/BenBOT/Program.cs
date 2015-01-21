@@ -4,6 +4,7 @@ using System.Linq;
 using System.Reflection;
 using System.Threading;
 using BenBOT.Configuration;
+using BenBOT.Configuration.ConfigurationProviders;
 using Meebey.SmartIrc4net;
 
 namespace BenBOT
@@ -17,6 +18,14 @@ namespace BenBOT
 
         private static void Main(string[] args)
         {
+            BotConfiguration.Current = new BotConfiguration(new XmlConfigurationProvider());
+
+            if (args[0] == "/setup")
+            {
+                BotConfiguration.Current.SaveConfig<BotSettings>("config");
+                return;
+            }
+
             Irc.SendDelay = 400;
             Irc.AutoReconnect = true;
             Irc.ActiveChannelSyncing = true;

@@ -1,89 +1,70 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Xml.Serialization;
-using BenBOT.Models;
 
 namespace BenBOT.Configuration
 {
     public class BotConfiguration
     {
-        private static BotConfiguration _Current;
+        private readonly Dictionary<string, object> _configObjects;
+        private readonly IConfigurationProvider _configProvider;
 
-        public List<MatchedURL> MatchedURLs = new List<MatchedURL>();
         public BotSettings Settings;
 
-        public static BotConfiguration Current
+        public BotConfiguration(IConfigurationProvider configProvider)
         {
-            get
-            {
-                if (_Current == null)
-                {
-                    _Current = new BotConfiguration();
-                    _Current.LoadConfig();
-                    _Current.LoadURLs();
-                }
-                return _Current;
-            }
+            _configObjects = new Dictionary<string, object>();
+            _configProvider = configProvider;
+
+            // pre load the BotSettings class
+            var settings = (BotSettings)LoadConfig<BotSettings>("config");
+            Settings = settings ?? new BotSettings();
         }
 
-        public void LoadConfig()
+        public static BotConfiguration Current { get; set; }
+
+        /// <summary>
+        ///     returns a specific configuration element
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="configName"></param>
+        /// <returns></returns>
+        public T Config<T>(string configName)
         {
-            // Load Config File
-            var xs = new XmlSerializer(typeof (BotSettings));
-            try
-            {
-                using (FileStream fs = File.OpenRead("Settings.xml"))
-                {
-                    Settings = (BotSettings) xs.Deserialize(fs);
-                }
-            }
-            catch
-            {
-                Settings = new BotSettings();
-            }
+            if (!_configObjects.ContainsKey(configName))
+                throw new Exception("Config not found");
+
+            return (T) _configObjects[configName];
         }
 
-        public void SaveConfig()
+        public void RegisterConfig<T>(string configName, object configObject) where T : class
         {
-            // Save Application Config File
-            var xs = new XmlSerializer(typeof (BotSettings));
-            using (FileStream fs = File.Open("Settings.xml", FileMode.Create, FileAccess.Write, FileShare.None))
-            {
-                lock (Settings)
-                {
-                    xs.Serialize(fs, Settings);
-                }
-            }
+            // try and load a config if it already exists
+            var config = _configProvider.LoadConfiguration<T>(configName);
+
+            // if it doesn't exist, pre-populate it with the configObject
+            if (config == null)
+                _configObjects.Add(configName, new Tuple<object, Type>(configObject, typeof (T)));
+            else
+                _configObjects.Add(configName, new Tuple<object, Type>(config, typeof (T)));
         }
 
-        public void LoadURLs()
+        public void SaveConfig<T>(string configName) where T : class
         {
-            // Load Config File
-            var xs = new XmlSerializer(typeof (List<MatchedURL>));
-            try
-            {
-                using (FileStream fs = File.OpenRead("URLs.xml"))
-                {
-                    MatchedURLs = (List<MatchedURL>) xs.Deserialize(fs);
-                }
-            }
-            catch
-            {
-                MatchedURLs = new List<MatchedURL>();
-            }
+            if (!_configObjects.ContainsKey(configName))
+                throw new Exception("Config not found");
+            var conf = _configObjects[configName];
+
+            _configProvider.SaveConfiguration<T>(conf, configName);
         }
 
-        public void SaveURLs()
+        public T LoadConfig<T>(string configName) where T : class
         {
-            // Save Application Config File
-            var xs = new XmlSerializer(typeof (List<MatchedURL>));
-            using (FileStream fs = File.Open("URLs.xml", FileMode.Create, FileAccess.Write, FileShare.None))
-            {
-                lock (MatchedURLs)
-                {
-                    xs.Serialize(fs, MatchedURLs);
-                }
-            }
+            if (!_configObjects.ContainsKey(configName))
+                throw new Exception("Config not found");
+
+            return (T) _configProvider.LoadConfiguration<T>(configName);
         }
     }
 }

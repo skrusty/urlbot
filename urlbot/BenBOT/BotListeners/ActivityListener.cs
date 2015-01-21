@@ -1,7 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using BenBOT.Configuration;
 using Meebey.SmartIrc4net;
 
@@ -26,12 +23,16 @@ namespace BenBOT.BotListeners
             _irc.OnPart += _irc_OnPart;
         }
 
-        void _irc_OnPart(object sender, PartEventArgs e)
+        public void Stop()
+        {
+        }
+
+        private void _irc_OnPart(object sender, PartEventArgs e)
         {
             LogActivity(new UserActivityItem(e.Channel, "Part", DateTime.Now), e.Who, LastActionAttributeKey);
         }
 
-        void _irc_OnJoin(object sender, JoinEventArgs e)
+        private void _irc_OnJoin(object sender, JoinEventArgs e)
         {
             LogActivity(new UserActivityItem(e.Channel, "Join", DateTime.Now), e.Who, LastActionAttributeKey);
         }
@@ -48,8 +49,8 @@ namespace BenBOT.BotListeners
 
         private void LogActivity(UserActivityItem action, string nick, string key)
         {
-            var user = BotConfiguration.Current.Settings.GetUser(nick);
-            if(user==null)
+            BotUser user = BotConfiguration.Current.Settings.GetUser(nick);
+            if (user == null)
                 return;
 
             if (user.Attributes.ContainsKey(key))
@@ -57,18 +58,10 @@ namespace BenBOT.BotListeners
             else
                 user.Attributes.Add(key, action);
         }
-
-        public void Stop()
-        {
-        }
     }
 
     public class UserActivityItem
     {
-        public string Channel { get; set; }
-        public DateTime Date { get; set; }
-        public string Action { get; set; }
-
         public UserActivityItem()
         {
         }
@@ -79,5 +72,9 @@ namespace BenBOT.BotListeners
             Action = action;
             Date = date;
         }
+
+        public string Channel { get; set; }
+        public DateTime Date { get; set; }
+        public string Action { get; set; }
     }
 }

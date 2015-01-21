@@ -32,7 +32,7 @@ namespace BenBOT.BotCommands
                                 MatchString = segments[2],
                                 Reason = string.Join(" ", segments.Skip(3))
                             });
-                            BotConfiguration.Current.SaveConfig();
+                            BotConfiguration.Current.SaveConfig<BotSettings>("config");
                         }
                         catch
                         {
@@ -51,6 +51,7 @@ namespace BenBOT.BotCommands
                                 return;
 
                             BotConfiguration.Current.Settings.MatchActions.Remove(match);
+                            BotConfiguration.Current.SaveConfig<BotSettings>("config");
                         }
                         catch
                         {

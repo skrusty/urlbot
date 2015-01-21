@@ -47,7 +47,7 @@ namespace BenBOT.BotCommands
 
         private IEnumerable<MatchedURL> FilterURLs(string[] segments, BotUser user = null)
         {
-            List<MatchedURL> rtnUrls = BotConfiguration.Current.MatchedURLs;
+            var rtnUrls = BotConfiguration.Current.Config<List<MatchedURL>>("MatchedUrls");
             try
             {
                 // Loop from the next segment on

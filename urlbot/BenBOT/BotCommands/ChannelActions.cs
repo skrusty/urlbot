@@ -31,7 +31,7 @@ namespace BenBOT.BotCommands
                             BotConfiguration.Current.Settings.AutoJoinChannels.Add(segments[1]);
 
                             // Save Configuration
-                            BotConfiguration.Current.SaveConfig();
+                            BotConfiguration.Current.SaveConfig<BotSettings>("config");
 
                             BotUser.BroadcastToAdmins(irc, "Joined channel {0} by {1}", segments[1], senderData.Nick);
                         }

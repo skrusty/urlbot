@@ -56,6 +56,8 @@
     <Compile Include="BotListeners\ActivityListener.cs" />
     <Compile Include="BotListeners\MatchListener.cs" />
     <Compile Include="BotListeners\URLListener.cs" />
+    <Compile Include="Configuration\ConfigurationProviders\XmlConfigurationProvider.cs" />
+    <Compile Include="Configuration\IConfigurationProvider.cs" />
     <Compile Include="Helpers\SerializableDictionary.cs" />
     <Compile Include="IBotListener.cs" />
     <Compile Include="Models\ActionMatch.cs" />

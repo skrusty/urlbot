@@ -70,10 +70,10 @@ namespace BenBOT.BotCommands
                         if (user.IsAdmin)
                         {
                             // Dump all url information to XML
-                            BotConfiguration.Current.SaveURLs();
+                            //BotConfiguration.Current.SaveURLs();
 
-                            BotUser.BroadcastToAdmins(irc, "Dumped {0} URLs",
-                                BotConfiguration.Current.MatchedURLs.Count());
+                            //BotUser.BroadcastToAdmins(irc, "Dumped {0} URLs",
+                            //    BotConfiguration.Current.MatchedURLs.Count());
                         }
                     }
                     catch
@@ -92,7 +92,7 @@ namespace BenBOT.BotCommands
                         user.Email = segments[1];
                         user.Pass = segments[2];
 
-                        BotConfiguration.Current.SaveConfig();
+                        BotConfiguration.Current.SaveConfig<BotSettings>("config");
 
                         irc.RfcPrivmsg(senderData.Nick,
                             "Thank you, you've been added to the bot as an admin. !SETUP will no longer allow admins to be added for security reasons.");
@@ -131,20 +131,19 @@ namespace BenBOT.BotCommands
                         {
                             if (segments.Count() == 1)
                             {
-                                BotConfiguration.Current.LoadConfig();
-                                BotConfiguration.Current.LoadURLs();
+                                BotConfiguration.Current.Settings = BotConfiguration.Current.LoadConfig<BotSettings>("config");
                             }
                             else
                             {
-                                switch (segments[1].ToUpper())
-                                {
-                                    case "CONFIG":
-                                        BotConfiguration.Current.LoadConfig();
-                                        break;
-                                    case "URLS":
-                                        BotConfiguration.Current.LoadURLs();
-                                        break;
-                                }
+                                //switch (segments[1].ToUpper())
+                                //{
+                                //    case "CONFIG":
+                                //        BotConfiguration.Current.LoadConfig();
+                                //        break;
+                                //    case "URLS":
+                                //        BotConfiguration.Current.LoadURLs();
+                                //        break;
+                                //}
                             }
                             BotUser.BroadcastToAdmins(irc, "{0} forced a reload.", senderData.Nick);
                         }
@@ -158,7 +157,7 @@ namespace BenBOT.BotCommands
                     {
                         if (user.IsAdmin)
                         {
-                            BotConfiguration.Current.SaveConfig();
+                            BotConfiguration.Current.SaveConfig<BotSettings>("config");
                         }
                     }
                     catch
@@ -171,8 +170,7 @@ namespace BenBOT.BotCommands
                         if (user.IsAdmin)
                         {
                             // Quits the bot
-                            BotConfiguration.Current.SaveURLs();
-                            BotConfiguration.Current.SaveConfig();
+                            BotConfiguration.Current.SaveConfig<BotSettings>("config");
 
                             if (segments.Count() > 1)
                                 irc.RfcQuit(string.Join(" ", segments.Take(1)));

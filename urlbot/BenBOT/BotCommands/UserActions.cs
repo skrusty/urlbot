@@ -51,7 +51,7 @@ namespace BenBOT.BotCommands
                                 "Welcome {0}, we've registered you with the following email address {1}.",
                                 senderData.Nick, segments[1]));
 
-                        BotConfiguration.Current.SaveConfig();
+                        BotConfiguration.Current.SaveConfig<BotSettings>("config");
                     }
                     catch
                     {

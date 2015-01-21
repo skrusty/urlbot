@@ -24,7 +24,7 @@ namespace BenBOT.BotCommands
 
         public void ProcessCommand(string[] segments, BotUser user, IrcClient irc, IrcMessageData senderData)
         {
-            List<MatchedURL> rtn = BotConfiguration.Current.MatchedURLs;
+            var rtn = BotConfiguration.Current.Config<List<MatchedURL>>("MatchedUrls");
             try
             {
                 string query = string.Empty;
@@ -41,7 +41,7 @@ namespace BenBOT.BotCommands
                             Query = query
                         });
 
-                        BotConfiguration.Current.SaveConfig();
+                        BotConfiguration.Current.SaveConfig<BotSettings>("config");
                         irc.SendMessage(SendType.Message, senderData.Nick, "Saved new query: " + segments[2]);
                         break;
                     case "RUN":

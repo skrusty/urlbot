@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using BenBOT.Configuration;
 using BenBOT.Models;
@@ -13,6 +14,7 @@ namespace BenBOT.BotListeners
         public void Init(IrcClient irc)
         {
             _irc = irc;
+            BotConfiguration.Current.RegisterConfig<List<MatchedURL>>("MatchedUrls", new List<MatchedURL>());
         }
 
         public void Start()
@@ -52,7 +54,7 @@ namespace BenBOT.BotListeners
             foreach (Match match in mactches)
             {
                 Console.WriteLine("Found URL: " + match.Value);
-                BotConfiguration.Current.MatchedURLs.Add(new MatchedURL
+                BotConfiguration.Current.Config<List<MatchedURL>>("MatchedUrls").Add(new MatchedURL
                 {
                     Channel = e.Data.Channel,
                     DateTime = DateTime.Now,
