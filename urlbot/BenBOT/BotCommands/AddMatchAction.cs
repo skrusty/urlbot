@@ -28,12 +28,13 @@ namespace BenBOT.BotCommands
                     {
                         try
                         {
-                            BotConfiguration.Current.Config<List<ActionMatch>>(MatchListener.ConfigName).Add(new ActionMatch
-                            {
-                                Action = segments[1],
-                                MatchString = segments[2],
-                                Reason = string.Join(" ", segments.Skip(3))
-                            });
+                            BotConfiguration.Current.Config<List<ActionMatch>>(MatchListener.ConfigName)
+                                .Add(new ActionMatch
+                                {
+                                    Action = segments[1],
+                                    MatchString = segments[2],
+                                    Reason = string.Join(" ", segments.Skip(3))
+                                });
                             BotConfiguration.Current.SaveConfig<BotSettings>("config");
                         }
                         catch
@@ -46,9 +47,10 @@ namespace BenBOT.BotCommands
                     {
                         try
                         {
-                            string matchString = segments[1];
-                            ActionMatch match = BotConfiguration.Current.Config<List<ActionMatch>>(MatchListener.ConfigName).SingleOrDefault(
-                                x => x.MatchString == matchString);
+                            var matchString = segments[1];
+                            var match = BotConfiguration.Current.Config<List<ActionMatch>>(MatchListener.ConfigName)
+                                .SingleOrDefault(
+                                    x => x.MatchString == matchString);
                             if (match == null)
                                 return;
 

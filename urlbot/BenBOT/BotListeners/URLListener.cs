@@ -69,17 +69,16 @@ namespace BenBOT.BotListeners
                 {
                     var x = new WebClient();
                     var source = x.DownloadString(match.Value);
-                    string title = Regex.Match(source, @"\<title\b[^>]*\>\s*(?<Title>[\s\S]*?)\</title\>", RegexOptions.IgnoreCase).Groups["Title"].Value;
+                    var title =
+                        Regex.Match(source, @"\<title\b[^>]*\>\s*(?<Title>[\s\S]*?)\</title\>", RegexOptions.IgnoreCase)
+                            .Groups["Title"].Value;
 
                     _irc.SendMessage(SendType.Message, e.Data.Channel, "Title: " + title);
                 }
                 catch (Exception ex)
                 {
-
                 }
             }
-
-           
         }
     }
 }

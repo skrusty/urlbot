@@ -21,7 +21,7 @@ namespace BenBOT.BotCommands
 
         public void ProcessCommand(string[] segments, BotUser user, IrcClient irc, IrcMessageData senderData)
         {
-            List<MatchedURL> rtnUrls = FilterURLs(segments, user).OrderByDescending(x => x.DateTime).Take(10).ToList();
+            var rtnUrls = FilterURLs(segments, user).OrderByDescending(x => x.DateTime).Take(10).ToList();
             try
             {
                 if (rtnUrls.Any())
@@ -51,9 +51,9 @@ namespace BenBOT.BotCommands
             try
             {
                 // Loop from the next segment on
-                for (int i = 1; i < segments.Count(); i++)
+                for (var i = 1; i < segments.Count(); i++)
                 {
-                    string seg = segments[i];
+                    var seg = segments[i];
                     if (seg.StartsWith("#"))
                         rtnUrls = rtnUrls.Where(x => x.Channel.ToUpper() == seg.ToUpper()).ToList();
                     else if (seg.StartsWith("@"))
@@ -69,15 +69,15 @@ namespace BenBOT.BotCommands
                                 rtnUrls = rtnUrls.Where(x => x.DateTime.Date == DateTime.Now.Date.AddDays(-1)).ToList();
                                 break;
                             case "MATCHING":
-                                string keyword = segments[++i];
+                                var keyword = segments[++i];
                                 rtnUrls = rtnUrls.Where(x => x.URL.Contains(keyword)).ToList();
                                 break;
                             case "LAST":
                                 try
                                 {
-                                    int interval = int.Parse(segments[++i]);
-                                    string type = segments[++i];
-                                    int searchPeriod = 0;
+                                    var interval = int.Parse(segments[++i]);
+                                    var type = segments[++i];
+                                    var searchPeriod = 0;
                                     switch (type)
                                     {
                                         case "days":
@@ -108,7 +108,9 @@ namespace BenBOT.BotCommands
                                 break;
                             case "LASTSPOKE":
                                 if (user != null)
-                                    rtnUrls = rtnUrls.Where(x => x.DateTime >= (DateTime)user.Attributes["LastSpoke"]).ToList();
+                                    rtnUrls =
+                                        rtnUrls.Where(x => x.DateTime >= (DateTime) user.Attributes["LastSpoke"])
+                                            .ToList();
                                 break;
                         }
                     }

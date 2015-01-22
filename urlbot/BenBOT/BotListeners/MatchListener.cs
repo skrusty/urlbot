@@ -8,8 +8,8 @@ namespace BenBOT.BotListeners
 {
     public class MatchListener : IBotListener
     {
-        private IrcClient _irc;
         public const string ConfigName = "actionmatch";
+        private IrcClient _irc;
 
         public void Init(IrcClient irc)
         {
@@ -33,7 +33,6 @@ namespace BenBOT.BotListeners
                 ProcessMessage(e);
         }
 
-
         private void _irc_OnChannelMessage(object sender, IrcEventArgs e)
         {
             if (!e.Data.Message.StartsWith("!"))
@@ -42,9 +41,9 @@ namespace BenBOT.BotListeners
 
         private void ProcessMessage(IrcEventArgs e)
         {
-            BotUser user = BotConfiguration.Current.Settings.GetUser(e.Data.Nick);
+            var user = BotConfiguration.Current.Settings.GetUser(e.Data.Nick);
 
-            ActionMatch action = CheckActions(e.Data.Message);
+            var action = CheckActions(e.Data.Message);
             if (action == null) return;
 
             switch (action.Action.ToUpper())
@@ -65,7 +64,9 @@ namespace BenBOT.BotListeners
 
         public ActionMatch CheckActions(string strToMatch)
         {
-            return BotConfiguration.Current.Config<List<ActionMatch>>(ConfigName).FirstOrDefault(x => strToMatch.Contains(x.MatchString));
+            return
+                BotConfiguration.Current.Config<List<ActionMatch>>(ConfigName)
+                    .FirstOrDefault(x => strToMatch.Contains(x.MatchString));
         }
     }
 }

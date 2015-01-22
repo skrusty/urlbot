@@ -7,7 +7,6 @@ namespace BenBOT.Configuration
     {
         private readonly Dictionary<string, object> _configObjects;
         private readonly IConfigurationProvider _configProvider;
-
         public BotSettings Settings;
 
         public BotConfiguration(IConfigurationProvider configProvider)
@@ -33,7 +32,7 @@ namespace BenBOT.Configuration
             if (!_configObjects.ContainsKey(configName.ToLower()))
                 throw new Exception("Config not found");
 
-            return (T)_configObjects[configName.ToLower()];
+            return (T) _configObjects[configName.ToLower()];
         }
 
         public void RegisterConfig<T>(string configName, object configObject) where T : class

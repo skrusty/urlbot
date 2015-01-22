@@ -36,7 +36,7 @@ namespace BenBOT.Configuration.ConfigurationProviders
                     }
                 }
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 Console.WriteLine(ex.Message);
                 return null;

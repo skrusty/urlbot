@@ -27,7 +27,7 @@ namespace BenBOT.BotCommands
             var rtn = BotConfiguration.Current.Config<List<MatchedURL>>("MatchedUrls");
             try
             {
-                string query = string.Empty;
+                var query = string.Empty;
 
                 switch (segments[1].ToUpper())
                 {
@@ -46,7 +46,7 @@ namespace BenBOT.BotCommands
                         break;
                     case "RUN":
                     {
-                        SavedQuery savedquery =
+                        var savedquery =
                             user.SavedQueries.SingleOrDefault(x => x.Name == segments[2]);
                         if (savedquery != null)
                             query = savedquery.Query;

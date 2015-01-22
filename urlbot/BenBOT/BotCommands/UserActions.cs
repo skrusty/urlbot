@@ -23,7 +23,7 @@ namespace BenBOT.BotCommands
                 case "!REGISTER":
                     try
                     {
-                        BotUser newUser =
+                        var newUser =
                             BotConfiguration.Current.Settings.KnownUsers.SingleOrDefault(x => x.Nick == senderData.Nick);
                         if (newUser == null)
                         {

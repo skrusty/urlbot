@@ -49,7 +49,7 @@ namespace BenBOT.BotListeners
 
         private void LogActivity(UserActivityItem action, string nick, string key)
         {
-            BotUser user = BotConfiguration.Current.Settings.GetUser(nick);
+            var user = BotConfiguration.Current.Settings.GetUser(nick);
             if (user == null)
                 return;
 

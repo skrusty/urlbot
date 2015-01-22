@@ -61,7 +61,7 @@ namespace BenBOT.Helpers
                 writer.WriteEndElement();
 
                 writer.WriteStartElement("value");
-                TValue value = this[key];
+                var value = this[key];
                 valueSerializer.Serialize(writer, value);
                 writer.WriteEndElement();
 

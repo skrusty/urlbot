@@ -24,10 +24,8 @@ namespace BenBOT.Configuration
         public bool IsAdmin { get; set; }
         public bool IsModerator { get; set; }
         public bool IsGuest { get; set; }
-
         public List<SavedQuery> SavedQueries { get; set; }
         public List<HistoryItem> CommandHistory { get; set; }
-
         public Dictionary<string, object> Attributes { get; set; }
 
         public int CommandsInLast(int seconds)
@@ -58,14 +56,14 @@ namespace BenBOT.Configuration
             var encodedPassword = new UTF8Encoding().GetBytes(password);
 
             // need MD5 to calculate the hash
-            var hash = ((HashAlgorithm)CryptoConfig.CreateFromName("MD5")).ComputeHash(encodedPassword);
+            var hash = ((HashAlgorithm) CryptoConfig.CreateFromName("MD5")).ComputeHash(encodedPassword);
 
             // string representation (similar to UNIX format)
             var encoded = BitConverter.ToString(hash)
                 // without dashes
-               .Replace("-", string.Empty)
+                .Replace("-", string.Empty)
                 // make lowercase
-               .ToLower();
+                .ToLower();
 
             // encoded contains the hash you are wanting
             return encoded;

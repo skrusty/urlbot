@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using System.Text;
 using Meebey.SmartIrc4net;
 
 namespace BenBOT
@@ -22,8 +21,8 @@ namespace BenBOT
                     .Where(t => String.Equals(t.Namespace, "BenBOT.BotListeners", StringComparison.Ordinal))
                     .ToArray();
             foreach (var listener in botCommands.Where(cmd =>
-                cmd.GetInterfaces().Contains(typeof(IBotListener))).Select(cmd =>
-                    (IBotListener)Activator.CreateInstance(cmd)))
+                cmd.GetInterfaces().Contains(typeof (IBotListener))).Select(cmd =>
+                    (IBotListener) Activator.CreateInstance(cmd)))
             {
                 listener.Init(irc);
                 listener.Start();
@@ -42,8 +41,8 @@ namespace BenBOT
                     .ToArray();
             foreach (var cmd in botCommands)
             {
-                if (cmd.GetInterfaces().Contains(typeof(IBotCommand)))
-                    BotCommands.Add((IBotCommand)Assembly.GetCallingAssembly().CreateInstance(cmd.FullName));
+                if (cmd.GetInterfaces().Contains(typeof (IBotCommand)))
+                    BotCommands.Add((IBotCommand) Assembly.GetCallingAssembly().CreateInstance(cmd.FullName));
             }
         }
 

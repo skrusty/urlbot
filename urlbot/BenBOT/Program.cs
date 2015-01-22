@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using System.Threading;
 using BenBOT.Configuration;
 using BenBOT.Configuration.ConfigurationProviders;
@@ -12,7 +10,7 @@ namespace BenBOT
     internal class Program
     {
         public static IrcClient Irc = new IrcClient();
-        
+
         private static void Main(string[] args)
         {
             BotConfiguration.Current = new BotConfiguration(new JsonConfigurationProvider());
@@ -58,12 +56,6 @@ namespace BenBOT
                 Console.ReadKey();
             }
         }
-
-        
-
-        
-
-        
 
         public static void ParseMessage(IrcEventArgs e)
         {
