@@ -73,7 +73,8 @@ namespace BenBOT.BotListeners
                         Regex.Match(source, @"\<title\b[^>]*\>\s*(?<Title>[\s\S]*?)\</title\>", RegexOptions.IgnoreCase)
                             .Groups["Title"].Value;
 
-                    _irc.SendMessage(SendType.Message, e.Data.Channel, "Title: " + title);
+                    if(!string.IsNullOrEmpty(title))
+                        _irc.SendMessage(SendType.Message, e.Data.Channel, "Title: " + title);
                 }
                 catch (Exception ex)
                 {
