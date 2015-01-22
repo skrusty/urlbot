@@ -28,7 +28,7 @@ namespace BenBOT.Configuration
         public List<SavedQuery> SavedQueries { get; set; }
         public List<HistoryItem> CommandHistory { get; set; }
 
-        public SerializableDictionary<string, object> Attributes { get; set; }
+        public Dictionary<string, object> Attributes { get; set; }
 
         public int CommandsInLast(int seconds)
         {

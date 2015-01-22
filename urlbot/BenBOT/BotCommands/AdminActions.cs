@@ -46,8 +46,8 @@ namespace BenBOT.BotCommands
                             if (segments.Count() > 1)
                             {
                                 var history = new List<HistoryItem>();
-                                string histNick = segments[1];
-                                BotUser botUser =
+                                var histNick = segments[1];
+                                var botUser =
                                     BotConfiguration.Current.Settings.KnownUsers.SingleOrDefault(x => x.Nick == histNick);
                                 if (botUser != null)
                                     history = botUser.CommandHistory.Take(10).ToList();
@@ -103,12 +103,12 @@ namespace BenBOT.BotCommands
                     {
                         if (user.IsAdmin)
                         {
-                            BotUser permUser = BotConfiguration.Current.Settings.GetUser(segments[1]);
+                            var permUser = BotConfiguration.Current.Settings.GetUser(segments[1]);
                             if (permUser == null || permUser.IsGuest)
                             {
                                 irc.SendReply(senderData, "Unknown user. Ensure they've registered and are not a guest");
                             }
-                            bool op = segments[2] == "+";
+                            var op = segments[2] == "+";
                             switch (segments[2].ToUpper())
                             {
                                 case "MOD":
@@ -146,7 +146,6 @@ namespace BenBOT.BotCommands
                     {
                         if (user.IsAdmin)
                         {
-                            
                         }
                     }
                     catch
@@ -160,6 +159,7 @@ namespace BenBOT.BotCommands
                         {
                             // Quits the bot
                             BotConfiguration.Current.SaveConfig<BotSettings>("config");
+                            BotModulesManager.BotListeners.ForEach(x => x.Stop());
 
                             if (segments.Count() > 1)
                                 irc.RfcQuit(string.Join(" ", segments.Take(1)));

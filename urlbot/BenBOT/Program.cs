@@ -12,12 +12,10 @@ namespace BenBOT
     internal class Program
     {
         public static IrcClient Irc = new IrcClient();
-        public static List<IBotCommand> BotCommands = new List<IBotCommand>();
-        public static List<IBotListener> BotListeners = new List<IBotListener>();
-
+        
         private static void Main(string[] args)
         {
-            BotConfiguration.Current = new BotConfiguration(new XmlConfigurationProvider());
+            BotConfiguration.Current = new BotConfiguration(new JsonConfigurationProvider());
 
             if (args.Any() && args[0] == "/setup")
             {
@@ -38,7 +36,7 @@ namespace BenBOT
             Irc.OnKick += irc_OnKick;
             Irc.OnBan += irc_OnBan;
 
-            LoadBotCommands();
+            BotModulesManager.LoadBotCommands();
 
 
             try
@@ -46,7 +44,7 @@ namespace BenBOT
                 Irc.Connect(BotConfiguration.Current.Settings.IrcNetworkSettings.Server,
                     BotConfiguration.Current.Settings.IrcNetworkSettings.Port);
 
-                LoadBotListeners();
+                BotModulesManager.LoadBotListeners(Irc);
 
                 while (true)
                 {
@@ -61,41 +59,11 @@ namespace BenBOT
             }
         }
 
-        public static void LoadBotCommands()
-        {
-            var botCommands =
-                Assembly.GetCallingAssembly()
-                    .GetTypes()
-                    .Where(t => String.Equals(t.Namespace, "BenBOT.BotCommands", StringComparison.Ordinal))
-                    .ToArray();
-            foreach (var cmd in botCommands)
-            {
-                if (cmd.GetInterfaces().Contains(typeof (IBotCommand)))
-                    BotCommands.Add((IBotCommand) Assembly.GetCallingAssembly().CreateInstance(cmd.FullName));
-            }
-        }
+        
 
-        public static void LoadBotListeners()
-        {
-            var botCommands =
-                Assembly.GetCallingAssembly()
-                    .GetTypes()
-                    .Where(t => String.Equals(t.Namespace, "BenBOT.BotListeners", StringComparison.Ordinal))
-                    .ToArray();
-            foreach (var listener in botCommands.Where(cmd => 
-                cmd.GetInterfaces().Contains(typeof (IBotListener))).Select(cmd => 
-                    (IBotListener) Activator.CreateInstance(cmd)))
-            {
-                listener.Init(Irc);
-                listener.Start();
-                BotListeners.Add(listener);
-            }
-        }
+        
 
-        public static IBotCommand GetBotCommand(string command)
-        {
-            return BotCommands.SingleOrDefault(x => x.CommandsHandled.Contains(command.ToUpper()));
-        }
+        
 
         public static void ParseMessage(IrcEventArgs e)
         {
@@ -131,7 +99,7 @@ namespace BenBOT
 
 
             var segments = e.Data.Message.Split(' ');
-            var command = GetBotCommand(segments[0].ToUpper());
+            var command = BotModulesManager.GetBotCommand(segments[0].ToUpper());
             if (command == null)
                 return;
 
