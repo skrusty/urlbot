@@ -67,19 +67,50 @@ namespace BenBOT.BotListeners
                 // get page title
                 try
                 {
-                    var x = new WebClient();
-                    var source = x.DownloadString(match.Value);
-                    var title =
-                        Regex.Match(source, @"\<title\b[^>]*\>\s*(?<Title>[\s\S]*?)\</title\>", RegexOptions.IgnoreCase)
-                            .Groups["Title"].Value;
+                    var wr = new MyClient {HeadOnly = true};
+                    wr.DownloadDataAsync(new Uri(match.Value));
+                    wr.DownloadDataCompleted += (sender, args) =>
+                    {
+                        if (wr.ResponseHeaders != null)
+                        {
+                            var type = wr.ResponseHeaders["content-type"];
+                            if (type.Contains("text/html"))
+                            {
+                                wr.HeadOnly = false;
+                                var text = wr.DownloadString(match.Value);
 
-                    if(!string.IsNullOrEmpty(title))
-                        _irc.SendMessage(SendType.Message, e.Data.Channel, "Title: " + title);
+                                var title =
+                                    Regex.Match(text, @"\<title\b[^>]*\>\s*(?<Title>[\s\S]*?)\</title\>",
+                                        RegexOptions.IgnoreCase)
+                                        .Groups["Title"].Value;
+
+                                if (!string.IsNullOrEmpty(title))
+                                    _irc.SendMessage(SendType.Message, e.Data.Channel, "Title: " + title);
+
+                            }
+                        }
+                    };
+                    
                 }
                 catch (Exception ex)
                 {
+                    Console.WriteLine(ex.Message);
                 }
             }
+        }
+    }
+
+    class MyClient : WebClient
+    {
+        public bool HeadOnly { get; set; }
+        protected override WebRequest GetWebRequest(Uri address)
+        {
+            WebRequest req = base.GetWebRequest(address);
+            if (HeadOnly && req.Method == "GET")
+            {
+                req.Method = "HEAD";
+            }
+            return req;
         }
     }
 }
