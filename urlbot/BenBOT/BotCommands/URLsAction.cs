@@ -108,7 +108,7 @@ namespace BenBOT.BotCommands
                                 break;
                             case "LASTSPOKE":
                                 if (user != null)
-                                    rtnUrls = rtnUrls.Where(x => x.DateTime >= user.LastSpoke).ToList();
+                                    rtnUrls = rtnUrls.Where(x => x.DateTime >= (DateTime)user.Attributes["LastSpoke"]).ToList();
                                 break;
                         }
                     }

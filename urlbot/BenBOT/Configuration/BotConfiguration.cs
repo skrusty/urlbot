@@ -17,6 +17,7 @@ namespace BenBOT.Configuration
 
             // pre load the BotSettings class
             RegisterConfig<BotSettings>("config", new BotSettings());
+            Settings = Config<BotSettings>("config");
         }
 
         public static BotConfiguration Current { get; set; }

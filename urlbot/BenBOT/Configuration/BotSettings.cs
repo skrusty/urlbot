@@ -8,18 +8,32 @@ namespace BenBOT.Configuration
     {
         public BotSettings()
         {
-            BotName = "urlbot";
             KnownUsers = new List<BotUser>();
             AutoJoinChannels = new List<string>();
             SMTPSettings = new SMTPSettings();
-            MatchActions = new List<ActionMatch>();
+            IrcNetworkSettings = new IrcNetwork{
+                ServerName = "Quakenet",
+                Server = "irc.quakenet.org",
+                Port = 6665,
+                Nick = "urlbot"
+            };
+            //Networks = new List<IrcNetwork>()
+            //{
+            //    new IrcNetwork()
+            //    {
+            //        ServerName = "Quakenet",
+            //        Server = "irc.quakenet.org",
+            //        Port = 6665,
+            //        Nick = "urlbot"
+            //    }
+            //};
         }
 
         public string BotName { get; set; }
+        //public List<IrcNetwork> Networks { get; set; }
+        public IrcNetwork IrcNetworkSettings { get; set; }
         public List<string> AutoJoinChannels { get; set; }
         public List<BotUser> KnownUsers { get; set; }
-
-        public List<ActionMatch> MatchActions { get; set; }
 
         public SMTPSettings SMTPSettings { get; set; }
 
@@ -33,9 +47,14 @@ namespace BenBOT.Configuration
             return KnownUsers.Where(x => x.IsAdmin).ToList();
         }
 
-        public ActionMatch CheckActions(string strToMatch)
-        {
-            return MatchActions.FirstOrDefault(x => strToMatch.Contains(x.MatchString));
-        }
+    }
+
+    public class IrcNetwork
+    {
+        public string Server { get; set; }
+        public int Port { get; set; }
+        public string ServerName { get; set; }
+        public string Nick { get; set; }
+        
     }
 }

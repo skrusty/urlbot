@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Net;
 using System.Text.RegularExpressions;
 using BenBOT.Configuration;
 using BenBOT.Models;
@@ -39,16 +40,16 @@ namespace BenBOT.BotListeners
                 ProcessMessage(e);
         }
 
-        private static void ProcessMessage(IrcEventArgs e)
+        private void ProcessMessage(IrcEventArgs e)
         {
-            BotUser user = BotConfiguration.Current.Settings.GetUser(e.Data.Nick);
+            var user = BotConfiguration.Current.Settings.GetUser(e.Data.Nick);
 
             // To be parsed for data
             var regx =
                 new Regex(
                     "(http|https)://([\\w+?\\.\\w+])+([a-zA-Z0-9\\~\\!\\@\\#\\$\\%\\^\\&amp;\\*\\(\\)_\\-\\=\\+\\\\\\/\\?\\.\\:\\;\\'\\,]*)?",
                     RegexOptions.IgnoreCase);
-            MatchCollection mactches = regx.Matches(e.Data.Message);
+            var mactches = regx.Matches(e.Data.Message);
             if (mactches.Count == 0) return;
 
             foreach (Match match in mactches)
@@ -61,7 +62,23 @@ namespace BenBOT.BotListeners
                     Nick = e.Data.Nick,
                     URL = match.Value
                 });
+
+                // get page title
+                try
+                {
+                    var x = new WebClient();
+                    var source = x.DownloadString(match.Value);
+                    string title = Regex.Match(source, @"\<title\b[^>]*\>\s*(?<Title>[\s\S]*?)\</title\>", RegexOptions.IgnoreCase).Groups["Title"].Value;
+
+                    _irc.SendMessage(SendType.Message, e.Data.Channel, "Title: " + title);
+                }
+                catch (Exception ex)
+                {
+
+                }
             }
+
+           
         }
     }
 }

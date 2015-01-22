@@ -12,7 +12,6 @@ namespace BenBOT
     internal class Program
     {
         public static IrcClient Irc = new IrcClient();
-
         public static List<IBotCommand> BotCommands = new List<IBotCommand>();
         public static List<IBotListener> BotListeners = new List<IBotListener>();
 
@@ -20,7 +19,7 @@ namespace BenBOT
         {
             BotConfiguration.Current = new BotConfiguration(new XmlConfigurationProvider());
 
-            if (args[0] == "/setup")
+            if (args.Any() && args[0] == "/setup")
             {
                 BotConfiguration.Current.SaveConfig<BotSettings>("config");
                 return;
@@ -44,7 +43,8 @@ namespace BenBOT
 
             try
             {
-                Irc.Connect("port80a.se.quakenet.org", 6667);
+                Irc.Connect(BotConfiguration.Current.Settings.IrcNetworkSettings.Server,
+                    BotConfiguration.Current.Settings.IrcNetworkSettings.Port);
 
                 LoadBotListeners();
 
@@ -63,7 +63,7 @@ namespace BenBOT
 
         public static void LoadBotCommands()
         {
-            Type[] botCommands =
+            var botCommands =
                 Assembly.GetCallingAssembly()
                     .GetTypes()
                     .Where(t => String.Equals(t.Namespace, "BenBOT.BotCommands", StringComparison.Ordinal))
@@ -77,24 +77,18 @@ namespace BenBOT
 
         public static void LoadBotListeners()
         {
-            Type[] botCommands =
+            var botCommands =
                 Assembly.GetCallingAssembly()
                     .GetTypes()
                     .Where(t => String.Equals(t.Namespace, "BenBOT.BotListeners", StringComparison.Ordinal))
                     .ToArray();
-            foreach (var cmd in botCommands)
+            foreach (var listener in botCommands.Where(cmd => 
+                cmd.GetInterfaces().Contains(typeof (IBotListener))).Select(cmd => 
+                    (IBotListener) Activator.CreateInstance(cmd)))
             {
-                if (cmd.GetInterfaces().Contains(typeof (IBotListener)))
-                {
-                    var listener = (IBotListener) Assembly.GetCallingAssembly().CreateInstance(cmd.FullName);
-
-                    if (listener != null)
-                    {
-                        listener.Init(Irc);
-                        listener.Start();
-                        BotListeners.Add(listener);
-                    }
-                }
+                listener.Init(Irc);
+                listener.Start();
+                BotListeners.Add(listener);
             }
         }
 
@@ -105,7 +99,7 @@ namespace BenBOT
 
         public static void ParseMessage(IrcEventArgs e)
         {
-            BotUser user = BotConfiguration.Current.Settings.GetUser(e.Data.Nick);
+            var user = BotConfiguration.Current.Settings.GetUser(e.Data.Nick);
             if (user == null)
             {
                 // Add guest account for command tracking
@@ -118,50 +112,48 @@ namespace BenBOT
             }
 
 
-            if (e.Data.Message.StartsWith("!"))
-            {
-                // Command
-                // If guest, enforce command limit
-                if (user.IsGuest)
-                    if (user.CommandsInLast(60) == 2)
+            if (!e.Data.Message.StartsWith("!")) return;
+            // Command
+            // If guest, enforce command limit
+            if (user.IsGuest)
+                if (user.CommandsInLast(60) == 2)
+                {
+                    Irc.SendMessage(SendType.Message, e.Data.Nick, "Maximum commands per minute for guest reached.");
+                    user.CommandHistory.Add(new HistoryItem
                     {
-                        Irc.SendMessage(SendType.Message, e.Data.Nick, "Maximum commands per minute for guest reached.");
-                        user.CommandHistory.Add(new HistoryItem
-                        {
-                            Command = e.Data.RawMessage,
-                            Created = DateTime.Now
-                        });
-                        return;
-                    }
-                    else if (user.CommandsInLast(60) > 2)
-                        return;
-
-
-                string[] segments = e.Data.Message.Split(new[] {' '});
-                IBotCommand command = GetBotCommand(segments[0].ToUpper());
-                if (command == null)
+                        Command = e.Data.RawMessage,
+                        Created = DateTime.Now
+                    });
+                    return;
+                }
+                else if (user.CommandsInLast(60) > 2)
                     return;
 
-                try
-                {
-                    command.ProcessCommand(segments, user, Irc, e.Data);
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine(ex.Message);
-                }
 
-                // Add command to history tracker
-                user.CommandHistory.Add(new HistoryItem
-                {
-                    Command = e.Data.Message,
-                    Created = DateTime.Now
-                });
+            var segments = e.Data.Message.Split(' ');
+            var command = GetBotCommand(segments[0].ToUpper());
+            if (command == null)
+                return;
 
-
-                // Log last spoke
-                user.LastSpoke = DateTime.Now;
+            try
+            {
+                command.ProcessCommand(segments, user, Irc, e.Data);
             }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+
+            // Add command to history tracker
+            user.CommandHistory.Add(new HistoryItem
+            {
+                Command = e.Data.Message,
+                Created = DateTime.Now
+            });
+
+
+            // Log last spoke
+            user.Attributes["LastSpoke"] = DateTime.Now;
         }
 
         #region IRC Events
@@ -212,12 +204,10 @@ namespace BenBOT
         private static void irc_OnBan(object sender, BanEventArgs e)
         {
             // need a way to compare mask to current ident?
-            if (e.Hostmask.Contains(Irc.Nickname))
-            {
-                BotUser.BroadcastToAdmins((IrcClient) sender, "banned from channel {0} by {1}: {2}", e.Channel, e.Who,
-                    e.Hostmask);
-                Irc.Unban(e.Channel, e.Hostmask);
-            }
+            if (!e.Hostmask.Contains(Irc.Nickname)) return;
+            BotUser.BroadcastToAdmins((IrcClient) sender, "banned from channel {0} by {1}: {2}", e.Channel, e.Who,
+                e.Hostmask);
+            Irc.Unban(e.Channel, e.Hostmask);
         }
 
         #endregion

@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Cryptography;
+using System.Text;
 using BenBOT.Helpers;
 using Meebey.SmartIrc4net;
 
@@ -22,8 +24,6 @@ namespace BenBOT.Configuration
         public bool IsAdmin { get; set; }
         public bool IsModerator { get; set; }
         public bool IsGuest { get; set; }
-
-        public DateTime LastSpoke { get; set; }
 
         public List<SavedQuery> SavedQueries { get; set; }
         public List<HistoryItem> CommandHistory { get; set; }
@@ -50,6 +50,25 @@ namespace BenBOT.Configuration
             {
                 Console.WriteLine(ex.ToString());
             }
+        }
+
+        public static string ComputeHash(string password)
+        {
+            // byte array representation of that string
+            var encodedPassword = new UTF8Encoding().GetBytes(password);
+
+            // need MD5 to calculate the hash
+            var hash = ((HashAlgorithm)CryptoConfig.CreateFromName("MD5")).ComputeHash(encodedPassword);
+
+            // string representation (similar to UNIX format)
+            var encoded = BitConverter.ToString(hash)
+                // without dashes
+               .Replace("-", string.Empty)
+                // make lowercase
+               .ToLower();
+
+            // encoded contains the hash you are wanting
+            return encoded;
         }
     }
 

@@ -1,4 +1,6 @@
-﻿using BenBOT.Configuration;
+﻿using System.Collections.Generic;
+using System.Linq;
+using BenBOT.Configuration;
 using BenBOT.Models;
 using Meebey.SmartIrc4net;
 
@@ -7,10 +9,12 @@ namespace BenBOT.BotListeners
     public class MatchListener : IBotListener
     {
         private IrcClient _irc;
+        public const string ConfigName = "actionmatch";
 
         public void Init(IrcClient irc)
         {
             _irc = irc;
+            BotConfiguration.Current.RegisterConfig<List<ActionMatch>>(ConfigName, new List<ActionMatch>());
         }
 
         public void Start()
@@ -40,7 +44,7 @@ namespace BenBOT.BotListeners
         {
             BotUser user = BotConfiguration.Current.Settings.GetUser(e.Data.Nick);
 
-            ActionMatch action = BotConfiguration.Current.Settings.CheckActions(e.Data.Message);
+            ActionMatch action = CheckActions(e.Data.Message);
             if (action == null) return;
 
             switch (action.Action.ToUpper())
@@ -57,6 +61,11 @@ namespace BenBOT.BotListeners
                     _irc.SendReply(e.Data, action.Reason);
                     break;
             }
+        }
+
+        public ActionMatch CheckActions(string strToMatch)
+        {
+            return BotConfiguration.Current.Config<List<ActionMatch>>(ConfigName).FirstOrDefault(x => strToMatch.Contains(x.MatchString));
         }
     }
 }

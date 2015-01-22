@@ -90,7 +90,7 @@ namespace BenBOT.BotCommands
                         user.IsGuest = false;
                         user.IsAdmin = true;
                         user.Email = segments[1];
-                        user.Pass = segments[2];
+                        user.Pass = BotUser.ComputeHash(segments[2]);
 
                         BotConfiguration.Current.SaveConfig<BotSettings>("config");
 
@@ -146,7 +146,7 @@ namespace BenBOT.BotCommands
                     {
                         if (user.IsAdmin)
                         {
-                            BotConfiguration.Current.SaveConfig<BotSettings>("config");
+                            
                         }
                     }
                     catch
@@ -163,6 +163,8 @@ namespace BenBOT.BotCommands
 
                             if (segments.Count() > 1)
                                 irc.RfcQuit(string.Join(" ", segments.Take(1)));
+                            else
+                                irc.RfcQuit();
                             irc.Disconnect();
                             Environment.Exit(0);
                         }
