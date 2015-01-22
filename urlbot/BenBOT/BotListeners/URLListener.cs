@@ -26,6 +26,7 @@ namespace BenBOT.BotListeners
 
         public void Stop()
         {
+            BotConfiguration.Current.SaveConfig<List<MatchedURL>>("MatchedUrls");
         }
 
         private void _irc_OnQueryMessage(object sender, IrcEventArgs e)

@@ -30,39 +30,39 @@ namespace BenBOT.Configuration
         /// <returns></returns>
         public T Config<T>(string configName)
         {
-            if (!_configObjects.ContainsKey(configName))
+            if (!_configObjects.ContainsKey(configName.ToLower()))
                 throw new Exception("Config not found");
 
-            return (T) _configObjects[configName];
+            return (T)_configObjects[configName.ToLower()];
         }
 
         public void RegisterConfig<T>(string configName, object configObject) where T : class
         {
             // try and load a config if it already exists
-            var config = _configProvider.LoadConfiguration<T>(configName);
+            var config = _configProvider.LoadConfiguration<T>(configName.ToLower());
 
             // if it doesn't exist, pre-populate it with the configObject
             if (config == null)
-                _configObjects.Add(configName, configObject);
+                _configObjects.Add(configName.ToLower(), configObject);
             else
-                _configObjects.Add(configName, config);
+                _configObjects.Add(configName.ToLower(), config);
         }
 
         public void SaveConfig<T>(string configName) where T : class
         {
-            if (!_configObjects.ContainsKey(configName))
+            if (!_configObjects.ContainsKey(configName.ToLower()))
                 throw new Exception("Config not found");
-            var conf = _configObjects[configName];
+            var conf = _configObjects[configName.ToLower()];
 
-            _configProvider.SaveConfiguration<T>(conf, configName);
+            _configProvider.SaveConfiguration<T>(conf, configName.ToLower());
         }
 
         public T LoadConfig<T>(string configName) where T : class
         {
-            if (!_configObjects.ContainsKey(configName))
+            if (!_configObjects.ContainsKey(configName.ToLower()))
                 throw new Exception("Config not found");
 
-            return _configProvider.LoadConfiguration<T>(configName);
+            return _configProvider.LoadConfiguration<T>(configName.ToLower());
         }
     }
 }
