@@ -27,11 +27,17 @@ namespace BenBOT.BotCommands
                     {
                         if (user.IsAdmin)
                         {
-                            irc.RfcJoin(segments[1]);
-                            BotConfiguration.Current.Settings.AutoJoinChannels.Add(segments[1]);
-
-                            // Save Configuration
-                            BotConfiguration.Current.SaveConfig<BotSettings>("config");
+                            if (segments.Count() == 3)
+                            {
+                                irc.RfcJoin(segments[1], segments[2]);
+                            }
+                            else
+                            {
+                                irc.RfcJoin(segments[1]);
+                                // Save Configuration
+                                BotConfiguration.Current.Settings.AutoJoinChannels.Add(segments[1]);
+                                BotConfiguration.Current.SaveConfig<BotSettings>("config");
+                            }
 
                             BotUser.BroadcastToAdmins(irc, "Joined channel {0} by {1}", segments[1], senderData.Nick);
                         }
