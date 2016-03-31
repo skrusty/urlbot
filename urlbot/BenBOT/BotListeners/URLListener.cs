@@ -68,6 +68,7 @@ namespace BenBOT.BotListeners
                 try
                 {
                     var wr = new MyClient {HeadOnly = true};
+
                     wr.DownloadDataAsync(new Uri(match.Value));
                     wr.DownloadDataCompleted += (sender, args) =>
                     {

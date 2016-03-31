@@ -12,7 +12,7 @@ namespace BenBOT.BotCommands
             get { return new[] {"!JOIN", "!PART"}; }
         }
 
-        public string[] HelpMessage(string command)
+        public string HelpMessage(string command)
         {
             throw new NotImplementedException();
         }

@@ -13,9 +13,9 @@ namespace BenBOT.BotCommands
             get { return new[] {"!CHANS", "!HISTORY", "!DUMP", "!SETUP", "!SETPERM", "!RELOAD", "!SAVE", "!QUIT"}; }
         }
 
-        public string[] HelpMessage(string command)
+        public string HelpMessage(string command)
         {
-            return new[] {""};
+            return "";
         }
 
         public void ProcessCommand(string[] segments, BotUser user, IrcClient irc, IrcMessageData senderData)
@@ -162,7 +162,7 @@ namespace BenBOT.BotCommands
                             BotModulesManager.BotListeners.ForEach(x => x.Stop());
 
                             if (segments.Count() > 1)
-                                irc.RfcQuit(string.Join(" ", segments.Take(1)));
+                                irc.RfcQuit(string.Join(" ", segments.Skip(1)));
                             else
                                 irc.RfcQuit();
                             irc.Disconnect();

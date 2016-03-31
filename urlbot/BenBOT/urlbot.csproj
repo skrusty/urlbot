@@ -55,6 +55,7 @@
     <Compile Include="BotCommands\ActivityActions.cs" />
     <Compile Include="BotCommands\AdminActions.cs" />
     <Compile Include="BotCommands\ChannelActions.cs" />
+    <Compile Include="BotCommands\CoreActions.cs" />
     <Compile Include="BotCommands\StatsActions.cs" />
     <Compile Include="BotCommands\UserActions.cs" />
     <Compile Include="BotModulesManager.cs" />

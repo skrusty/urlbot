@@ -14,9 +14,16 @@ namespace BenBOT.BotCommands
             get { return new[] {"!ADDMATCH", "!DELMATCH"}; }
         }
 
-        public string[] HelpMessage(string command)
+        public string HelpMessage(string command)
         {
-            return new[] {""};
+            switch (command.ToUpper())
+            {
+                case "!ADDMATCH":
+                    return "!ADDMATCH <Action(KICK|REPLY)> <MatchString> <Reason/Response>. (E.g. !ADDMATCH REPLY ?c# http://www.tutorialspoint.com/csharp/";
+                case "!DELMATCH":
+                    return "!DELMATCH <MatchString>";
+            }
+            throw new System.Exception("Unknown Command");
         }
 
         public void ProcessCommand(string[] segments, BotUser user, IrcClient irc, IrcMessageData senderData)

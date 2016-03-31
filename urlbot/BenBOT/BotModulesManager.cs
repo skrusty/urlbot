@@ -50,5 +50,12 @@ namespace BenBOT
         {
             return BotCommands.SingleOrDefault(x => x.CommandsHandled.Contains(command.ToUpper()));
         }
+
+        public static string GetBotCommandHelp(string command)
+        {
+            var cmd = GetBotCommand(command);
+            return cmd.HelpMessage(command);
+        }
+
     }
 }

@@ -11,9 +11,9 @@ namespace BenBOT.BotCommands
             get { return new[] {"!REGISTER"}; }
         }
 
-        public string[] HelpMessage(string command)
+        public string HelpMessage(string command)
         {
-            return new[] {"REGISTER"};
+            return "";
         }
 
         public void ProcessCommand(string[] segments, BotUser user, IrcClient irc, IrcMessageData senderData)

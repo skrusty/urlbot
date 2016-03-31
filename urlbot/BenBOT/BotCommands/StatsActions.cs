@@ -10,9 +10,9 @@ namespace BenBOT.BotCommands
             get { return new[] {"!URLSTATS"}; }
         }
 
-        public string[] HelpMessage(string command)
+        public string HelpMessage(string command)
         {
-            return new[] {""};
+            return "";
         }
 
         public void ProcessCommand(string[] segments, BotUser user, IrcClient irc, IrcMessageData senderData)
